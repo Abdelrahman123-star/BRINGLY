@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= typeof searchTerm !== 'undefined' && searchTerm ? `Search: "${searchTerm}" — BRINGLY` : (typeof category !== 'undefined' && category ? `${category.name} — BRINGLY` : 'Curated Showroom — BRINGLY') %>
+  </title>
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Distinctive Atelier Typographic System -->
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <!-- Header -->
+  <%- include('../components/header') %>
+
+  <main class="products-container">
+
+    <!-- Header Section (Contextual: Search vs Category vs Catalog) -->
+    <% if (typeof searchTerm !== 'undefined' && searchTerm && searchTerm.trim() !== '') { %>
+      <!-- Search Mode Header -->
+      <section class="atelier-search-header" aria-label="Search Summary">
+        <div class="search-title-row">
+          <div class="search-meta">
+            <span class="search-count-pill">
+              <i class="fas fa-search"></i>
+              <span><%= products.length %> <%= products.length === 1 ? 'Curated Piece' : 'Curated Pieces' %> Found</span>
+            </span>
+            <h1>Search: “<%= searchTerm %>”</h1>
+          </div>
+
+          <!-- In-Page Search Refinement -->
+          <div class="search-refine-box">
+            <form action="/search" method="GET" class="search-refine-form" role="search">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input type="text" name="term" value="<%= searchTerm %>" placeholder="Refine search query..." data-i18n-placeholder="productsCatalog.refineSearch" required autocomplete="off">
+              <button type="submit" aria-label="Submit search">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Bespoke European Concierge Sourcing Callout -->
+        <div class="search-concierge-callout">
+          <div class="callout-info">
+            <div class="concierge-callout-icon" aria-hidden="true">
+              <i class="fas fa-compass"></i>
+            </div>
+            <div class="concierge-callout-text">
+              <h4 data-i18n="productsCatalog.conciergeQuestion">Searching for a specific “<%= searchTerm %>” model or edition?</h4>
+              <p data-i18n="productsCatalog.conciergeDesc">Our European concierge desk can source, inspect, and courier it directly to your doorstep.</p>
+            </div>
+          </div>
+          <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am searching for '${searchTerm}' and would like to ask your sourcing desk to help source this item for me from Germany.`) %>"
+             target="_blank" 
+             class="btn-callout-wa"
+             title="Request Bespoke Sourcing on WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+            <span data-i18n="productsCatalog.requestOnWa">Request on WhatsApp</span>
+          </a>
+        </div>
+      </section>
+
+    <% } else if (typeof category !== 'undefined' && category) { %>
+      <!-- Category Mode Header -->
+      <section class="category-header" aria-label="Category Overview">
+        <span class="category-tag" data-i18n="productsCatalog.curatedCollection">Curated Collection</span>
+        <h1><%= category.name %></h1>
+        <% if (category.description) { %>
+          <p><%= category.description %></p>
+        <% } %>
+      </section>
+
+    <% } else { %>
+      <!-- General Catalog Header -->
+      <section class="category-header" aria-label="Catalog Overview">
+        <span class="category-tag" data-i18n="productsCatalog.atelierCatalog">Atelier Catalog</span>
+        <h1 data-i18n="productsCatalog.curatedPieces">Curated Pieces & Collections</h1>
+        <p data-i18n="productsCatalog.catalogIntro">Explore our seasonal lookbook of tailored apparel, luxury essentials, and sports club gear. Contact our styling concierge directly on WhatsApp for sizing and orders.</p>
+      </section>
+    <% } %>
+
+    <!-- Filter & Sort Toolbar -->
+    <div class="filters-bar" aria-label="Catalog Controls">
+      <div class="filter-group">
+        <button class="filter-button <%= (typeof currentFilter === 'undefined' || currentFilter === 'all') ? 'active' : '' %>" data-filter="all" data-i18n="productsCatalog.allPieces">
+          All Pieces
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <span class="results-count-text">
+          <%= products ? products.length : 0 %> <%= (products && products.length === 1) ? 'item' : 'items' %>
+        </span>
+        <label for="sortSelect" class="visually-hidden" style="position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);">Sort By</label>
+        <select id="sortSelect" class="sort-select" onchange="updateSort(this.value)">
+          <option value="newest" <%= (typeof currentSort === 'undefined' || currentSort === 'newest') ? 'selected' : '' %> data-i18n="productsCatalog.newestArrivals">Newest Arrivals</option>
+          <option value="rating" <%= (typeof currentSort !== 'undefined' && currentSort === 'rating') ? 'selected' : '' %> data-i18n="productsCatalog.highestRated">Highest Rated</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <section class="product-list" aria-label="Products List">
+      <% if (products && products.length > 0) { %>
+        <% products.forEach(product => { %>
+          <article class="product-card" onclick="window.location.href='/products/detail/<%= product._id %>'">
+            <div class="product-image">
+              <% if (product.imageUrl && product.imageUrl.trim() !== '') { %>
+                <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
+              <% } else if (product.imagePath && product.imagePath.trim() !== '') { %>
+                <img src="<%= product.imagePath %>" alt="<%= product.name %>" loading="lazy">
+              <% } else { %>
+                <img src="/imgs/img-notfound.jpg" alt="Image Not Found" loading="lazy">
+              <% } %>
+
+              <div class="product-actions">
+                <button class="action-button" title="View Details" aria-label="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="product-info">
+              <span class="product-collection-tag" data-i18n="productsCatalog.atelierSelection">Atelier Selection</span>
+              <h3><%= product.name %></h3>
+
+              <div class="product-stock-tag <%= product.stock > 10 ? 'in-stock' : (product.stock > 0 ? 'low-stock' : 'out-of-stock') %>">
+                <i class="fas <%= product.stock > 10 ? 'fa-check-circle' : (product.stock > 0 ? 'fa-exclamation-circle' : 'fa-times-circle') %>"></i>
+                <span><%= product.stock > 10 ? 'Available in Showroom' : (product.stock > 0 ? 'Limited Quantity' : 'Made to Order') %></span>
+              </div>
+
+              <!-- Direct WhatsApp Action Button -->
+              <div class="product-wa-action">
+                <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in '${product.name}'. Could you please share more details, availability, and pricing?`) %>" 
+                   target="_blank" 
+                   class="btn-wa-card"
+                   onclick="event.stopPropagation();"
+                   title="Inquire on WhatsApp">
+                  <i class="fab fa-whatsapp"></i>
+                  <span data-i18n="productsCatalog.inquireOnWa">Inquire on WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+
+      <% } else { %>
+        <!-- Empty State: Reassuring Atelier Sourcing -->
+        <div class="search-empty-state">
+          <div class="empty-icon-wrap" aria-hidden="true">
+            <i class="fas fa-search-minus"></i>
+          </div>
+          
+          <h2 data-i18n="productsCatalog.noPiecesTitle">No Showroom Pieces Found <%= typeof searchTerm !== 'undefined' && searchTerm ? `for “${searchTerm}”` : '' %></h2>
+          <p data-i18n="productsCatalog.noPiecesDesc">
+            Our in-stock inventory is carefully curated, but our bespoke Germany Sourcing Desk can source, inspect, and hand-carry any item for you on our next flight.
+          </p>
+
+          <div class="empty-actions">
+            <% if (typeof searchTerm !== 'undefined' && searchTerm) { %>
+              <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I searched for '${searchTerm}' on your store but couldn't find it. Can your sourcing concierge help find and acquire this for me from Germany?`) %>"
+                 target="_blank"
+                 class="btn-empty-wa">
+                <i class="fab fa-whatsapp"></i>
+                <span data-i18n="productsCatalog.askOnWa">Ask BRINGLY on WhatsApp</span>
+              </a>
+            <% } else { %>
+              <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I%20am%20looking%20for%20a%20specific%20item%20and%20need%20concierge%20assistance."
+                 target="_blank"
+                 class="btn-empty-wa">
+                <i class="fab fa-whatsapp"></i>
+                <span data-i18n="productsCatalog.askOnWa">Ask BRINGLY on WhatsApp</span>
+              </a>
+            <% } %>
+
+            <a href="/Category" class="btn-empty-browse" data-i18n="productsCatalog.browseAllCollections">
+              Browse All Collections
+            </a>
+          </div>
+        </div>
+      <% } %>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include('../components/footer') %>
+
+  <!-- Search & Filter Persistence Script -->
+  <script>
+    function updateSort(value) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('sort', value);
+      window.location.href = url.toString();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const filterButtons = document.querySelectorAll('.filter-button');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+          const filter = this.dataset.filter;
+          const url = new URL(window.location.href);
+          if (filter === 'all') {
+            url.searchParams.delete('filter');
+          } else {
+            url.searchParams.set('filter', filter);
+          }
+          window.location.href = url.toString();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

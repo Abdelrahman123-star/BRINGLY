@@ -1,0 +1,112 @@
+<!-- Universal Language Switcher Component -->
+<div class="language-switcher" role="group" aria-label="Language switcher">
+    <button type="button" onclick="changeLanguage('en')" class="lang-btn" data-lang="en">
+        <span class="lang-text">EN</span>
+    </button>
+    <div class="divider"></div>
+    <button type="button" onclick="changeLanguage('ar')" class="lang-btn" data-lang="ar">
+        <span class="lang-text">عربي</span>
+    </button>
+</div>
+
+<style>
+    .language-switcher {
+        position: fixed;
+        bottom: 22px;
+        left: 22px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 4px;
+        border-radius: 9999px;
+        box-shadow: 0 8px 24px -4px rgba(26, 34, 56, 0.16), 0 2px 6px rgba(0, 0, 0, 0.04);
+        border: 1px solid #E8E0D5;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .language-switcher:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px -4px rgba(26, 34, 56, 0.22);
+    }
+    .lang-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 9999px;
+        background: transparent;
+        color: #6B645C;
+        font-family: 'Albert Sans', 'Cairo', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .lang-btn:hover {
+        color: #C46849;
+        background: rgba(196, 104, 73, 0.08);
+    }
+    .lang-btn.active {
+        background: #1A2238;
+        color: #FFFFFF;
+        box-shadow: 0 2px 8px rgba(26, 34, 56, 0.25);
+    }
+    .lang-text {
+        letter-spacing: 0.03em;
+    }
+    .divider {
+        width: 1px;
+        height: 18px;
+        background: #E8E0D5;
+        margin: 0 2px;
+    }
+    @media (max-width: 768px) {
+        .language-switcher {
+            bottom: 16px;
+            left: 16px;
+            padding: 3px;
+        }
+        .lang-btn {
+            padding: 5px 11px;
+            font-size: 12px;
+        }
+    }
+</style>
+
+<!-- Load i18next & plugin scripts if not already present -->
+<script>
+    (function() {
+        function loadScript(src, cb) {
+            if (document.querySelector('script[src="' + src + '"]')) {
+                if (cb) cb();
+                return;
+            }
+            var s = document.createElement('script');
+            s.src = src;
+            s.async = false;
+            if (cb) s.onload = cb;
+            document.head.appendChild(s);
+        }
+
+        if (typeof i18next === 'undefined') {
+            loadScript("https://unpkg.com/i18next/dist/umd/i18next.min.js", function() {
+                loadScript("https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js", function() {
+                    loadScript("https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js", function() {
+                        loadScript("/js/i18n.js", function() {
+                            if (window.updateContent) window.updateContent();
+                        });
+                    });
+                });
+            });
+        } else if (typeof window.updateContent !== 'function') {
+            loadScript("/js/i18n.js", function() {
+                if (window.updateContent) window.updateContent();
+            });
+        } else {
+            window.updateContent();
+        }
+    })();
+</script>

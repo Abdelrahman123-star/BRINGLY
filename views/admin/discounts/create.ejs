@@ -1,0 +1,280 @@
+<%- include('../adminComponents/head') %>
+<%- include('../adminComponents/header') %>
+<%- include('../adminComponents/slideBar') %>
+<%- include('../adminComponents/switchLanguage') %>
+<link rel="stylesheet" href="/css/adminHomePage.css">
+<link rel="stylesheet" href="/css/admin/discounts.css">
+
+<div class="main-content">
+  <div class="header">
+    <h1 data-i18n="adminDiscounts.createTitle">Create New Discount</h1>
+    <a href="/admin/discounts" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> <span data-i18n="adminDiscounts.backToDiscounts">Back to Discounts</span>
+    </a>
+  </div>
+
+  <div class="form-container">
+    <form action="/admin/discounts/create" method="POST" class="discount-form">
+      <div class="form-section">
+        <h2 data-i18n="adminDiscounts.basicInfo">Basic Information</h2>
+        
+        <div class="form-group">
+          <label for="name" data-i18n="adminDiscounts.discountName">Discount Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description" data-i18n="adminDiscounts.description">Description</label>
+          <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type" data-i18n="adminDiscounts.discountType">Discount Type</label>
+            <select id="type" name="type" required>
+              <option value="percentage" data-i18n="adminDiscounts.percentage">Percentage</option>
+              <option value="fixed" data-i18n="adminDiscounts.fixedAmount">Fixed Amount</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="value" data-i18n="adminDiscounts.value">Value</label>
+            <input type="number" id="value" name="value" min="0" step="0.01" required>
+            <span class="value-hint" data-i18n="adminDiscounts.valueHint">Enter percentage or amount in LE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2 data-i18n="adminDiscounts.timePeriod">Time Period</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate" data-i18n="adminDiscounts.startDate">Start Date</label>
+            <input type="datetime-local" id="startDate" name="startDate" required>
+          </div>
+
+          <div class="form-group">
+            <label for="endDate" data-i18n="adminDiscounts.endDate">End Date</label>
+            <input type="datetime-local" id="endDate" name="endDate" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2 data-i18n="adminDiscounts.scope">Scope</h2>
+        
+        <div class="form-group">
+          <label data-i18n="adminDiscounts.products">Products</label>
+          <div class="tag-input-container" id="productTagInputContainer">
+            <div class="selected-tags" id="selectedProductsTags"></div>
+            <input type="text" class="tag-search-input" id="productSearchInput" data-i18n-placeholder="adminDiscounts.searchProducts" placeholder="Search products..." autocomplete="off">
+            <div class="tag-options-dropdown" id="productOptionsDropdown">
+              <!-- Options populated by JavaScript -->
+            </div>
+            <!-- Hidden select to hold selected values for form submission -->
+            <select id="products" name="products" multiple style="display: none;">
+              <% products.forEach(product => { %>
+                <option value="<%= product._id %>">
+                  <%= product.name %> - <%= product.price %> LE
+                </option>
+              <% }) %>
+            </select>
+          </div>
+          <span class="select-hint" data-i18n="adminDiscounts.searchProductsHint">Type to search and select products.</span>
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="adminDiscounts.categories">Categories</label>
+          <div class="tag-input-container" id="categoryTagInputContainer">
+            <div class="selected-tags" id="selectedCategoriesTags"></div>
+            <input type="text" class="tag-search-input" id="categorySearchInput" data-i18n-placeholder="adminDiscounts.searchCategories" placeholder="Search categories..." autocomplete="off">
+            <div class="tag-options-dropdown" id="categoryOptionsDropdown">
+              <!-- Options populated by JavaScript -->
+            </div>
+            <!-- Hidden select to hold selected values for form submission -->
+            <select id="categories" name="categories" multiple style="display: none;">
+              <% categories.forEach(category => { %>
+                <option value="<%= category._id %>"><%= category.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <span class="select-hint" data-i18n="adminDiscounts.searchCategoriesHint">Type to search and select categories.</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> <span data-i18n="adminDiscounts.createDiscount">Create Discount</span>
+        </button>
+        <a href="/admin/discounts" class="btn btn-secondary" data-i18n="adminDiscounts.cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="application/json" id="productsData">
+  <%- JSON.stringify(products) %>
+</script>
+
+<script type="application/json" id="categoriesData">
+  <%- JSON.stringify(categories) %>
+</script>
+
+<!-- Add i18next and plugins from CDN -->
+<script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+<script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
+<script src="https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
+<script src="/js/i18n.js"></script>
+
+<script>
+  const allProductsData = JSON.parse(document.getElementById('productsData').textContent);
+  const allCategoriesData = JSON.parse(document.getElementById('categoriesData').textContent);
+
+document.addEventListener('DOMContentLoaded', function() {
+  const typeSelect = document.getElementById('type');
+  const valueInput = document.getElementById('value');
+  const valueHint = document.querySelector('.value-hint');
+
+  typeSelect.addEventListener('change', function() {
+    if (this.value === 'percentage') {
+      valueInput.max = '100';
+      valueHint.setAttribute('data-i18n', 'adminDiscounts.percentageHint');
+    } else {
+      valueInput.removeAttribute('max');
+      valueHint.setAttribute('data-i18n', 'adminDiscounts.fixedAmountHint');
+    }
+    i18next.changeLanguage(i18next.language); // Refresh translations
+  });
+
+  // Set minimum dates for start and end date inputs
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  const now = new Date().toISOString().slice(0, 16);
+  
+  startDateInput.min = now;
+  endDateInput.min = now;
+
+  startDateInput.addEventListener('change', function() {
+    endDateInput.min = this.value;
+  });
+
+  // Initialize value hint based on current type
+  if (typeSelect.value === 'percentage') {
+    valueInput.max = '100';
+    valueHint.setAttribute('data-i18n', 'adminDiscounts.percentageHint');
+  } else {
+    valueInput.removeAttribute('max');
+    valueHint.setAttribute('data-i18n', 'adminDiscounts.fixedAmountHint');
+  }
+
+  // New Tag Input Logic
+  function setupTagInput(containerId, searchInputId, tagsContainerId, optionsDropdownId, hiddenSelectId, allItems) {
+    const container = document.getElementById(containerId);
+    const searchInput = document.getElementById(searchInputId);
+    const tagsContainer = document.getElementById(tagsContainerId);
+    const optionsDropdown = document.getElementById(optionsDropdownId);
+    const hiddenSelect = document.getElementById(hiddenSelectId);
+
+    function renderOptions(filter = '') {
+      optionsDropdown.innerHTML = '';
+      const filteredItems = allItems.filter(item => 
+        !Array.from(hiddenSelect.options).some(opt => opt.selected && opt.value === item._id) &&
+        item.name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filteredItems.length === 0 && filter !== '') {
+        optionsDropdown.innerHTML = '<div class="tag-option-item no-results" data-i18n="adminDiscounts.noResults">No results found</div>';
+        optionsDropdown.style.display = 'block';
+        return;
+      }
+      if (filteredItems.length === 0 && filter === '') {
+        optionsDropdown.style.display = 'none';
+        return;
+      }
+
+      filteredItems.forEach(item => {
+        const optionElement = document.createElement('div');
+        optionElement.classList.add('tag-option-item');
+        optionElement.dataset.id = item._id;
+        optionElement.textContent = item.name + (item.price ? ' - ' + item.price + ' LE' : '');
+        optionsDropdown.appendChild(optionElement);
+      });
+      optionsDropdown.style.display = 'block';
+    }
+
+    function addTag(id, name) {
+      const tag = document.createElement('span');
+      tag.classList.add('tag');
+      tag.dataset.id = id;
+      tag.innerHTML = `${name} <i class="fas fa-times remove-tag"></i>`;
+      tagsContainer.appendChild(tag);
+
+      const optionToSelect = Array.from(hiddenSelect.options).find(option => option.value === id);
+      if (optionToSelect) {
+        optionToSelect.selected = true;
+      }
+    }
+
+    tagsContainer.addEventListener('click', function(event) {
+      if (event.target.classList.contains('remove-tag')) {
+        const tag = event.target.closest('.tag');
+        const idToRemove = tag.dataset.id;
+        
+        const optionToDeselect = Array.from(hiddenSelect.options).find(option => option.value === idToRemove);
+        if (optionToDeselect) {
+          optionToDeselect.selected = false;
+        }
+        tag.remove();
+        renderOptions(searchInput.value); 
+      }
+    });
+
+    let debounceTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        renderOptions(this.value);
+      }, 300); 
+    });
+
+    searchInput.addEventListener('focus', () => renderOptions(searchInput.value));
+
+    optionsDropdown.addEventListener('click', function(event) {
+      if (event.target.classList.contains('tag-option-item') && !event.target.classList.contains('no-results')) {
+        const id = event.target.dataset.id;
+        const name = event.target.textContent;
+        addTag(id, name);
+        searchInput.value = ''; 
+        optionsDropdown.style.display = 'none'; 
+        renderOptions(); 
+      }
+    });
+
+    document.addEventListener('click', function(event) {
+      if (!container.contains(event.target)) {
+        optionsDropdown.style.display = 'none';
+      }
+    });
+  }
+
+  setupTagInput(
+    'productTagInputContainer', 
+    'productSearchInput', 
+    'selectedProductsTags', 
+    'productOptionsDropdown', 
+    'products', 
+    allProductsData
+  );
+
+  setupTagInput(
+    'categoryTagInputContainer', 
+    'categorySearchInput', 
+    'selectedCategoriesTags', 
+    'categoryOptionsDropdown', 
+    'categories', 
+    allCategoriesData
+  );
+});
+</script>
+

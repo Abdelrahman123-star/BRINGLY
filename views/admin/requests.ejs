@@ -1,0 +1,738 @@
+<%- include('adminComponents/head') %>
+
+<body>
+  <div class="admin-container">
+    <%- include('adminComponents/header') %>
+    <%- include('adminComponents/slideBar') %>
+    <%- include('adminComponents/switchLanguage') %>
+
+    <main class="admin-main">
+      <section class="requests-management">
+        <div class="page-title-row">
+          <div>
+            <h2>BRINGLY Sourcing Requests Management</h2>
+            <p class="page-subtitle">Track, quote, and source items requested by customers in Egypt directly from Germany.</p>
+          </div>
+        </div>
+
+        <% if (messages && messages.success_msg && messages.success_msg.length > 0) { %>
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <%= messages.success_msg %>
+          </div>
+        <% } %>
+        <% if (messages && messages.error_msg && messages.error_msg.length > 0) { %>
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <%= messages.error_msg %>
+          </div>
+        <% } %>
+
+        <!-- Metrics Overview Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon-wrapper total-icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total Requests</h3>
+              <p class="stat-number"><%= stats.total %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper pending-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Pending Review</h3>
+              <p class="stat-number"><%= stats.pending %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper sourced-icon">
+              <i class="fas fa-plane-departure"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Sourced in Germany</h3>
+              <p class="stat-number"><%= stats.sourced %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper shipped-icon">
+              <i class="fas fa-plane-arrival"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Shipped to Egypt</h3>
+              <p class="stat-number"><%= stats.shipped %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper delivered-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Delivered</h3>
+              <p class="stat-number"><%= stats.delivered %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="requests-toolbar">
+          <form action="/admin/requests" method="GET" class="search-filter-form">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" name="q" value="<%= searchQuery || '' %>" placeholder="Search by code, product, customer, phone...">
+            </div>
+
+            <div class="status-select-wrapper">
+              <i class="fas fa-filter"></i>
+              <select name="status" onchange="this.form.submit()">
+                <option value="all" <%= currentStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
+                <option value="Pending" <%= currentStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+                <option value="In Review" <%= currentStatus === 'In Review' ? 'selected' : '' %>>In Review</option>
+                <option value="Quoted" <%= currentStatus === 'Quoted' ? 'selected' : '' %>>Quoted</option>
+                <option value="Sourced in Germany" <%= currentStatus === 'Sourced in Germany' ? 'selected' : '' %>>Sourced</option>
+                <option value="Shipped to Egypt" <%= currentStatus === 'Shipped to Egypt' ? 'selected' : '' %>>Shipped / In Transit</option>
+                <option value="Delivered" <%= currentStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Cancelled" <%= currentStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </div>
+
+            <% if (searchQuery || currentStatus !== 'all') { %>
+              <a href="/admin/requests" class="clear-filters-btn">Clear</a>
+            <% } %>
+          </form>
+        </div>
+
+        <!-- Requests Table -->
+        <div class="table-container">
+          <table class="requests-table">
+            <thead>
+              <tr>
+                <th>Code & Date</th>
+                <th>Requested Item</th>
+                <th>Customer Contact</th>
+                <th>Budget / Quote</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (requests && requests.length > 0) { %>
+                <% requests.forEach(reqItem => { %>
+                  <% 
+                    // Format Egyptian phone for WhatsApp click
+                    let cleanPhone = reqItem.customerPhone.replace(/[^0-9]/g, '');
+                    if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
+                    if (!cleanPhone.startsWith('20') && cleanPhone.startsWith('1')) cleanPhone = '20' + cleanPhone;
+                    const waText = encodeURIComponent(`Hello ${reqItem.customerName}, regarding your request #${reqItem.requestCode} for "${reqItem.productName}":`);
+                    const waLink = `https://wa.me/${cleanPhone}?text=${waText}`;
+
+                    // Status Badge Class
+                    let statusClass = 'status-pending';
+                    if (reqItem.status === 'In Review') statusClass = 'status-review';
+                    else if (reqItem.status === 'Quoted') statusClass = 'status-quoted';
+                    else if (reqItem.status === 'Sourced in Germany') statusClass = 'status-sourced';
+                    else if (reqItem.status === 'Shipped to Egypt') statusClass = 'status-shipped';
+                    else if (reqItem.status === 'Delivered') statusClass = 'status-delivered';
+                    else if (reqItem.status === 'Cancelled') statusClass = 'status-cancelled';
+                  %>
+                  <tr>
+                    <!-- Code & Date -->
+                    <td>
+                      <span class="req-code">#<%= reqItem.requestCode %></span>
+                      <span class="req-date"><%= new Date(reqItem.createdAt).toLocaleDateString() %></span>
+                    </td>
+
+                    <!-- Product Details -->
+                    <td>
+                      <div class="product-cell">
+                        <strong><%= reqItem.productName %></strong>
+                        <span class="category-pill"><%= reqItem.category %></span>
+                        <p class="specs-preview" title="<%= reqItem.specifications %>">
+                          <%= reqItem.specifications.length > 80 ? reqItem.specifications.substring(0, 80) + '...' : reqItem.specifications %>
+                        </p>
+                        <% if (reqItem.referenceUrl) { %>
+                          <a href="<%= reqItem.referenceUrl %>" target="_blank" class="ref-link">
+                            <i class="fas fa-external-link-alt"></i> German Link
+                          </a>
+                        <% } %>
+                      </div>
+                    </td>
+
+                    <!-- Customer Contact & WhatsApp -->
+                    <td>
+                      <div class="customer-cell">
+                        <span class="customer-name"><i class="fas fa-user"></i> <%= reqItem.customerName %></span>
+                        <a href="mailto:<%= reqItem.customerEmail %>" class="customer-email">
+                          <i class="fas fa-envelope"></i> <%= reqItem.customerEmail %>
+                        </a>
+                        <div class="phone-row">
+                          <span class="customer-phone"><i class="fas fa-phone-alt"></i> <%= reqItem.customerPhone %></span>
+                          <a href="<%= waLink %>" target="_blank" class="wa-action-btn" title="Chat on WhatsApp">
+                            <i class="fab fa-whatsapp"></i> Chat
+                          </a>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Budget & Quote -->
+                    <td>
+                      <div class="pricing-cell">
+                        <div class="budget-row">
+                          <span>Target:</span>
+                          <strong><%= reqItem.targetBudget ? reqItem.targetBudget.toFixed(2) + ' LE' : 'Flexible' %></strong>
+                        </div>
+                        <div class="quote-row">
+                          <span>Quoted:</span>
+                          <strong class="quoted-val"><%= reqItem.quotedPrice ? reqItem.quotedPrice.toFixed(2) + ' LE' : 'Not set' %></strong>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Status -->
+                    <td>
+                      <span class="badge <%= statusClass %>"><%= reqItem.status %></span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                      <div class="actions-cell">
+                        <button type="button" class="btn-manage" 
+                                onclick="openManageModal('<%= JSON.stringify(reqItem).replace(/'/g, "\\'") %>')">
+                          <i class="fas fa-edit"></i> Manage
+                        </button>
+                        <form action="/admin/requests/<%= reqItem._id %>/delete" method="POST" onsubmit="return confirm('Delete request #<%= reqItem.requestCode %>?');" style="display:inline;">
+                          <button type="submit" class="btn-delete" title="Delete request">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="no-data-cell">
+                    <i class="fas fa-inbox"></i>
+                    <p>No product sourcing requests found.</p>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Manage Request Modal -->
+  <div id="manageModal" class="admin-modal-backdrop" style="display:none;">
+    <div class="admin-modal-box">
+      <div class="modal-header">
+        <h3><i class="fas fa-plane-departure"></i> Manage Request <span id="modalHeadCode"></span></h3>
+        <button type="button" class="close-x" onclick="closeManageModal()">&times;</button>
+      </div>
+
+      <form id="manageForm" method="POST" action="">
+        <div class="modal-body">
+          <div class="modal-info-panel">
+            <h4 id="modalItemTitle"></h4>
+            <p><strong>Category:</strong> <span id="modalItemCat"></span></p>
+            <p><strong>Customer:</strong> <span id="modalCustName"></span> (<span id="modalCustPhone"></span>)</p>
+            <p><strong>Customer Specifications:</strong></p>
+            <div id="modalItemSpecs" class="specs-full-box"></div>
+            <p id="modalRefRow" style="display:none;">
+              <strong>Store Link:</strong> <a id="modalRefAnchor" href="#" target="_blank">Open German Webpage</a>
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label for="modalStatusSelect">Update Request Status</label>
+            <select name="status" id="modalStatusSelect" required>
+              <option value="Pending">Pending (New)</option>
+              <option value="In Review">In Review (Checking Germany Stock)</option>
+              <option value="Quoted">Quoted (Sent Price to Customer)</option>
+              <option value="Sourced in Germany">Sourced (Purchased)</option>
+              <option value="Shipped to Egypt">Shipped (In Transit)</option>
+              <option value="Delivered">Delivered (Completed)</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="modalQuotedPrice">Quoted Total Price (EGP)</label>
+            <input type="number" step="0.01" name="quotedPrice" id="modalQuotedPrice" placeholder="Final price including customs & international shipping">
+          </div>
+
+          <div class="form-group">
+            <label for="modalAdminNotes">Internal Notes (Between Brothers / Team)</label>
+            <textarea name="adminNotes" id="modalAdminNotes" rows="3" placeholder="e.g. Bought from Decathlon Munich for 120 EUR, arriving on flight Nov 15th..."></textarea>
+          </div>
+          <div class="email-notice-box" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; font-size: 0.86rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-envelope-circle-check" style="font-size: 1.1rem; color: #16a34a;"></i>
+            <span><strong>Automatic Email:</strong> Customer will automatically receive an email with live tracking link and quote when saved.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="justify-content: space-between;">
+          <a id="modalWhatsAppQuoteBtn" href="#" target="_blank" class="btn-wa-quote" style="background: #25D366; color: #ffffff; padding: 0.7rem 1.4rem; border-radius: 10px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+            <i class="fab fa-whatsapp"></i> Send Quote via WhatsApp
+          </a>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-cancel" onclick="closeManageModal()">Cancel</button>
+            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save & Notify Customer</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .requests-management {
+      padding: 1.5rem;
+    }
+    .page-title-row {
+      margin-bottom: 1.5rem;
+    }
+    .page-title-row h2 {
+      font-size: 1.6rem;
+      color: #1e293b;
+      margin: 0 0 0.4rem;
+    }
+    .page-subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+    }
+    .stat-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+    .total-icon { background: #e0f2fe; color: #0284c7; }
+    .pending-icon { background: #fef3c7; color: #d97706; }
+    .sourced-icon { background: #dbeafe; color: #2563eb; }
+    .shipped-icon { background: #f3e8ff; color: #9333ea; }
+    .delivered-icon { background: #dcfce7; color: #16a34a; }
+    .stat-info h3 { font-size: 0.85rem; color: #64748b; margin: 0 0 4px; font-weight: 500; }
+    .stat-number { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0; }
+
+    /* Toolbar */
+    .requests-toolbar {
+      background: #ffffff;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    .search-filter-form {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.7rem 1rem 0.7rem 2.5rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .search-box input:focus { border-color: #ff5722; }
+    .status-select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .status-select-wrapper i {
+      position: absolute;
+      left: 0.85rem;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .status-select-wrapper select {
+      padding: 0.7rem 1.5rem 0.7rem 2.3rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .clear-filters-btn {
+      padding: 0.7rem 1.2rem;
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    /* Table */
+    .table-container {
+      background: #ffffff;
+      border-radius: 18px;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+    }
+    .requests-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .requests-table th {
+      background: #f8fafc;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      color: #475569;
+      font-weight: 600;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    .requests-table td {
+      padding: 1.2rem 1.25rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+      font-size: 0.95rem;
+    }
+    .req-code {
+      display: block;
+      font-weight: 700;
+      color: #ff5722;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+    .req-date {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+    .category-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin: 4px 0;
+    }
+    .specs-preview {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 4px 0 0;
+      line-height: 1.4;
+    }
+    .ref-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.82rem;
+      color: #0284c7;
+      margin-top: 6px;
+      text-decoration: underline;
+    }
+    .customer-cell span, .customer-cell a {
+      display: block;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .customer-name { font-weight: 600; }
+    .customer-email { color: #64748b; text-decoration: none; }
+    .phone-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .wa-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #25D366;
+      color: #fff !important;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem !important;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .wa-action-btn:hover { background: #1eb854; }
+    .pricing-cell { font-size: 0.88rem; }
+    .budget-row, .quote-row { margin-bottom: 4px; }
+    .budget-row span, .quote-row span { color: #64748b; margin-right: 4px; }
+    .quoted-val { color: #16a34a; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-pending { background: #fef3c7; color: #b45309; }
+    .status-review { background: #e0f2fe; color: #0369a1; }
+    .status-quoted { background: #ede9fe; color: #6d28d9; }
+    .status-sourced { background: #dbeafe; color: #1d4ed8; }
+    .status-shipped { background: #fce7f3; color: #be185d; }
+    .status-delivered { background: #dcfce7; color: #15803d; }
+    .status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    /* Action buttons */
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-manage {
+      background: #ff5722;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+    .btn-manage:hover { background: #e64a19; }
+    .btn-delete {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-delete:hover { background: #fca5a5; }
+    .no-data-cell {
+      text-align: center;
+      padding: 3rem !important;
+      color: #94a3b8;
+    }
+    .no-data-cell i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+
+    /* Modal */
+    .admin-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .admin-modal-box {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    }
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 { margin: 0; font-size: 1.25rem; color: #1e293b; }
+    .close-x { background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; }
+    .modal-body { padding: 1.5rem; max-height: 70vh; overflow-y: auto; }
+    .modal-info-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+    }
+    .modal-info-panel h4 { margin: 0 0 0.5rem; color: #0f172a; font-size: 1.05rem; }
+    .modal-info-panel p { margin: 4px 0; color: #475569; }
+    .specs-full-box {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-family: inherit;
+      white-space: pre-wrap;
+      margin-top: 4px;
+    }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-weight: 500; font-size: 0.9rem; color: #334155; margin-bottom: 0.4rem; }
+    .form-group select, .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .form-group select:focus, .form-group input:focus, .form-group textarea:focus {
+      border-color: #ff5722;
+    }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-cancel {
+      padding: 0.7rem 1.2rem;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 10px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-save {
+      padding: 0.7rem 1.4rem;
+      background: #ff5722;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: #e64a19; }
+  </style>
+
+  <script>
+    let activeModalItem = null;
+
+    function updateModalWhatsAppQuoteLink() {
+      if (!activeModalItem) return;
+
+      let cleanPhone = (activeModalItem.customerPhone || '').replace(/[^0-9]/g, '');
+      if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
+      else if (!cleanPhone.startsWith('20') && cleanPhone.startsWith('1')) cleanPhone = '20' + cleanPhone;
+
+      const priceVal = document.getElementById('modalQuotedPrice').value;
+      const priceText = priceVal ? `${Number(priceVal).toLocaleString()} EGP` : 'calculating...';
+      const notes = document.getElementById('modalAdminNotes').value;
+      const notesText = notes ? `\n📝 Note: ${notes}` : '';
+
+      const trackUrl = `${window.location.origin}/track-request/${activeModalItem.requestCode}`;
+
+      const text = `*BRINGLY Sourcing Update*\n\n` +
+                   `Hello *${activeModalItem.customerName}*!\n` +
+                   `Your quote for request #${activeModalItem.requestCode} (*${activeModalItem.productName}*) is ready:\n\n` +
+                   `💰 *Total Price:* *${priceText}*\n` +
+                   `*(Includes German store purchase, flight shipping to Cairo & customs)*${notesText}\n\n` +
+                   `🔍 *Track Live Status:*\n${trackUrl}\n\n` +
+                   `Would you like us to proceed with purchasing this item for you from Germany? Reply to this message to confirm!`;
+
+      const btn = document.getElementById('modalWhatsAppQuoteBtn');
+      if (btn) {
+        btn.href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+      }
+    }
+
+    function openManageModal(reqDataStr) {
+      const data = typeof reqDataStr === 'string' ? JSON.parse(reqDataStr) : reqDataStr;
+      activeModalItem = data;
+      
+      document.getElementById('modalHeadCode').textContent = '#' + data.requestCode;
+      document.getElementById('modalItemTitle').textContent = data.productName;
+      document.getElementById('modalItemCat').textContent = data.category;
+      document.getElementById('modalCustName').textContent = data.customerName;
+      document.getElementById('modalCustPhone').textContent = data.customerPhone;
+      document.getElementById('modalItemSpecs').textContent = data.specifications;
+      
+      const refRow = document.getElementById('modalRefRow');
+      const refAnchor = document.getElementById('modalRefAnchor');
+      if (data.referenceUrl) {
+        refAnchor.href = data.referenceUrl;
+        refRow.style.display = 'block';
+      } else {
+        refRow.style.display = 'none';
+      }
+
+      document.getElementById('modalStatusSelect').value = data.status || 'Pending';
+      document.getElementById('modalQuotedPrice').value = data.quotedPrice || '';
+      document.getElementById('modalAdminNotes').value = data.adminNotes || '';
+
+      updateModalWhatsAppQuoteLink();
+
+      document.getElementById('manageForm').action = `/admin/requests/${data._id}/update`;
+      document.getElementById('manageModal').style.display = 'flex';
+    }
+
+    // Live update WhatsApp quote button when price or notes are typed
+    document.addEventListener('DOMContentLoaded', () => {
+      const priceInput = document.getElementById('modalQuotedPrice');
+      const notesInput = document.getElementById('modalAdminNotes');
+      if (priceInput) priceInput.addEventListener('input', updateModalWhatsAppQuoteLink);
+      if (notesInput) notesInput.addEventListener('input', updateModalWhatsAppQuoteLink);
+    });
+
+    function closeManageModal() {
+      document.getElementById('manageModal').style.display = 'none';
+      activeModalItem = null;
+    }
+
+    // Close on backdrop click
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('manageModal');
+      if (e.target === modal) closeManageModal();
+    });
+  </script>
+</body>
+</html>

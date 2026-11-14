@@ -1,0 +1,272 @@
+/* ========================================================
+   MODERN LEVANTINE ATELIER - About Us Page Stylesheet
+   ======================================================== */
+
+body {
+  background-color: #FBF9F5;
+  color: #1C1917;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+.about-page-wrapper {
+  max-width: 1180px;
+  margin: 1.5rem auto 4.5rem;
+  padding: 0 1.5rem;
+}
+
+/* Editorial Hero Card */
+.about-hero-card {
+  background: #FFFFFF;
+  border: 1px solid #E8E0D5;
+  border-radius: 24px;
+  padding: 3.5rem 3rem;
+  text-align: center;
+  box-shadow: 0 12px 36px -8px rgba(26, 34, 56, 0.05);
+  margin-bottom: 3rem;
+}
+
+.about-kicker {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #C46849;
+  margin-bottom: 0.75rem;
+}
+
+.about-hero-card h1 {
+  font-family: 'Marcellus', Georgia, serif;
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  color: #1A2238;
+  font-weight: 400;
+  margin: 0 0 1.25rem;
+  line-height: 1.2;
+}
+
+.about-hero-card h1 .highlight {
+  color: #C46849;
+}
+
+.about-lead {
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: #555047;
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+
+.about-cta-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-about-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #1A2238;
+  color: #FFFFFF;
+  padding: 13px 28px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.btn-about-primary:hover {
+  background: #C46849;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+.btn-about-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #25D366;
+  color: #FFFFFF;
+  padding: 13px 26px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.28);
+}
+
+.btn-about-wa:hover {
+  background: #1eb853;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* How It Works / Pillars Grid */
+.about-section-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.about-section-header h2 {
+  font-family: 'Marcellus', Georgia, serif;
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+  color: #1A2238;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+}
+
+.about-section-header p {
+  color: #6B645C;
+  font-size: 0.96rem;
+  margin: 0 auto;
+  max-width: 560px;
+}
+
+.about-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.about-pillar-card {
+  background: #FFFFFF;
+  border: 1px solid #E8E0D5;
+  border-radius: 18px;
+  padding: 2rem 1.75rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px -4px rgba(26, 34, 56, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.about-pillar-card:hover {
+  transform: translateY(-4px);
+  border-color: #C46849;
+  box-shadow: 0 12px 28px -6px rgba(26, 34, 56, 0.08);
+}
+
+.pillar-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #F5EFE6;
+  border: 1px solid #E8E0D5;
+  color: #C46849;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  margin-bottom: 1.25rem;
+}
+
+.about-pillar-card h3 {
+  font-family: 'Marcellus', Georgia, serif;
+  font-size: 1.2rem;
+  color: #1A2238;
+  margin: 0 0 0.6rem;
+  font-weight: 400;
+}
+
+.about-pillar-card p {
+  font-size: 0.92rem;
+  color: #6B645C;
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.pillar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #C46849;
+  text-decoration: none;
+  margin-top: auto;
+}
+
+.pillar-link:hover {
+  color: #1A2238;
+}
+
+/* Story Callout Banner */
+.about-story-banner {
+  background: #F5EFE6;
+  border: 1px solid #E8E0D5;
+  border-radius: 20px;
+  padding: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.story-banner-text h3 {
+  font-family: 'Marcellus', Georgia, serif;
+  font-size: clamp(1.35rem, 2.8vw, 1.75rem);
+  color: #1A2238;
+  margin: 0 0 0.5rem;
+  font-weight: 400;
+}
+
+.story-banner-text p {
+  margin: 0;
+  color: #555047;
+  font-size: 0.95rem;
+  max-width: 620px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 960px) {
+  .about-pillars-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .about-story-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-page-wrapper {
+    padding: 0 1rem;
+    margin: 1rem auto 3rem;
+  }
+
+  .about-hero-card {
+    padding: 2.25rem 1.25rem;
+    border-radius: 18px;
+    margin-bottom: 2rem;
+  }
+
+  .about-cta-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-about-primary,
+  .btn-about-wa {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .about-pillar-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .about-story-banner {
+    padding: 1.75rem 1.25rem;
+  }
+}

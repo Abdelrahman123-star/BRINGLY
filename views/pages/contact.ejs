@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="contactPage.title">Contact & Sourcing Concierge — BRINGLY</title>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Distinctive Atelier Typographic System -->
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/contactUs.css">
+</head>
+<body>
+  <!-- Header -->
+  <%- include('../components/header') %>
+
+  <main class="contact-page-wrapper">
+    <div class="contact-container">
+      
+      <!-- Hero Intro Section -->
+      <section class="contact-hero">
+        <h1 data-i18n="contactPage.heroTitle">BRINGLY Sourcing Desk & Concierge</h1>
+        <p data-i18n="contactPage.heroSub">
+          Whether you want to order an in-stock piece in Egypt, request a custom item from Germany, or check our upcoming flight schedule, we are available directly on WhatsApp.
+        </p>
+      </section>
+
+      <!-- Main Two-Column Grid -->
+      <div class="contact-grid">
+        
+        <!-- Left Column: Direct Concierge Touchpoints -->
+        <aside class="touchpoints-card" aria-label="Direct Concierge Touchpoints">
+          
+          <!-- WhatsApp Premiere Spotlight Box -->
+          <div class="wa-spotlight-box">
+            <div class="wa-spotlight-header">
+              <h2 class="wa-channel-title" data-i18n="contactPage.waTitle">Direct WhatsApp Concierge</h2>
+              <div class="wa-status-pill">
+                <span class="wa-pulse-dot" aria-hidden="true"></span>
+                <span data-i18n="contactPage.availableToday">Available Today</span>
+              </div>
+            </div>
+
+            <div class="wa-phone-row">
+              <span class="wa-phone-number"><i class="fab fa-whatsapp"></i> +20 100 670 9258</span>
+            </div>
+
+            <p class="wa-spotlight-desc" data-i18n="contactPage.waDesc">
+              Connect instantly with our personal shopper for product availability, custom Germany sourcing, and direct order placement.
+            </p>
+
+            <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I%20would%20like%20to%20consult%20with%20your%20sourcing%20concierge." 
+               target="_blank" 
+               class="btn-primary-wa"
+               title="Open WhatsApp Chat">
+              <i class="fab fa-whatsapp"></i>
+              <span data-i18n="contactPage.startWa">Start WhatsApp Consultation</span>
+            </a>
+
+            <!-- Quick Topic Shortcuts -->
+            <div class="wa-quick-topics">
+              <span class="wa-quick-topics-label" data-i18n="contactPage.quickTopics">Quick Inquiry Topics</span>
+              <div class="topic-chips">
+                <a href="https://wa.me/201006709258?text=Hello!%20I%20need%20assistance%20with%20sizing%20and%20measurements." 
+                   target="_blank" 
+                   class="topic-chip">
+                  <i class="fas fa-ruler-combined"></i> <span data-i18n="contactPage.topicSizing">Sizing & Fit</span>
+                </a>
+                <a href="https://wa.me/201006709258?text=Hello!%20I%20am%20interested%20in%20a%20custom%20order%20or%20showroom%20piece." 
+                   target="_blank" 
+                   class="topic-chip">
+                  <i class="fas fa-tshirt"></i> <span data-i18n="contactPage.topicCustom">Custom Order</span>
+                </a>
+                <a href="https://wa.me/201006709258?text=Hello!%20I%20have%20an%20inquiry%20regarding%20European%20concierge%20sourcing." 
+                   target="_blank" 
+                   class="topic-chip">
+                  <i class="fas fa-plane"></i> <span data-i18n="contactPage.topicSourcing">Sourcing Desk</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- Right Column: Inquiry Message Card -->
+        <section class="form-card" id="formCard" aria-label="Atelier Message Form">
+          
+          <div class="form-card-header">
+            <h2 data-i18n="contactPage.formTitle">Send an Atelier Inquiry</h2>
+            <p data-i18n="contactPage.formSub">
+              Prefer to send a written brief? Complete the form below and our styling desk will reply promptly via your preferred channel.
+            </p>
+          </div>
+
+          <form id="contactForm" class="atelier-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contactName"><span data-i18n="contactPage.nameLabel">Your Full Name</span> <span class="required-mark">*</span></label>
+                <input class="form-input" type="text" id="contactName" data-i18n-placeholder="contactPage.namePlaceholder" placeholder="e.g. Layla Hassan" required autocomplete="name">
+              </div>
+              <div class="form-group">
+                <label for="contactPhone" data-i18n="contactPage.phoneLabel">WhatsApp / Mobile Number</label>
+                <input class="form-input" type="tel" id="contactPhone" data-i18n-placeholder="contactPage.phonePlaceholder" placeholder="e.g. +20 100 123 4567" autocomplete="tel">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contactEmail"><span data-i18n="contactPage.emailLabel">Email Address</span> <span class="required-mark">*</span></label>
+                <input class="form-input" type="email" id="contactEmail" data-i18n-placeholder="contactPage.emailPlaceholder" placeholder="e.g. layla@example.com" required autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="contactTopic"><span data-i18n="contactPage.topicLabel">Inquiry Topic</span> <span class="required-mark">*</span></label>
+                <select class="form-select" id="contactTopic" required>
+                  <option value="Showroom Piece Inquiry" data-i18n="contactPage.topicShowroom">Showroom Piece Inquiry</option>
+                  <option value="Sizing & Tailoring Consultation" data-i18n="contactPage.topicConsultation">Sizing & Tailoring Consultation</option>
+                  <option value="European Concierge Sourcing" data-i18n="contactPage.topicSourcingOpt">European Sourcing Request</option>
+                  <option value="General Inquiry" data-i18n="contactPage.topicGeneral">General Atelier Inquiry</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="contactMessage"><span data-i18n="contactPage.messageLabel">Your Message or Custom Request</span> <span class="required-mark">*</span></label>
+              <textarea class="form-textarea" id="contactMessage" data-i18n-placeholder="contactPage.messagePlaceholder" placeholder="Tell us which piece you are inquiring about, desired size, fabric preference, or any specific styling requests..." required></textarea>
+            </div>
+
+            <div class="form-submit-row">
+              <button class="btn-submit-concierge" type="submit">
+                <span data-i18n="contactPage.sendMessage">Send Message to Concierge</span>
+                <i class="fas fa-arrow-right"></i>
+              </button>
+              <span class="form-privacy-note" data-i18n="contactPage.privacyNote">We respect your privacy. No marketing spam.</span>
+            </div>
+          </form>
+
+          <!-- Interactive Success State -->
+          <div class="contact-success-card" id="contactSuccessCard" role="alert">
+            <div class="success-icon-wrap" aria-hidden="true">
+              <i class="fas fa-check"></i>
+            </div>
+            <h3><span data-i18n="contactPage.thankYou">Thank You</span>, <span id="successClientName">Guest</span></h3>
+            <p data-i18n="contactPage.successDesc">
+              Your message has been received by our atelier concierge team. We will review your inquiry and follow up shortly.
+            </p>
+            <div class="success-actions">
+              <a href="#" id="forwardWaBtn" target="_blank" class="btn-secondary-wa">
+                <i class="fab fa-whatsapp"></i>
+                <span data-i18n="contactPage.forwardWa">Forward Message to WhatsApp</span>
+              </a>
+              <button type="button" class="btn-reset-form" id="resetFormBtn" data-i18n="contactPage.sendAnother">
+                Send Another Inquiry
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- Bottom Assurance Row -->
+      <section class="contact-assurances" aria-label="Atelier Guarantees">
+        <div class="assurance-item">
+          <div class="assurance-icon" aria-hidden="true">
+            <i class="fas fa-gem"></i>
+          </div>
+          <div class="assurance-meta">
+            <h4 data-i18n="contactPage.guarantee1Title">Bespoke Guidance</h4>
+            <p data-i18n="contactPage.guarantee1Sub">Personal styling recommendations tailored to your exact fit and preference.</p>
+          </div>
+        </div>
+
+        <div class="assurance-item">
+          <div class="assurance-icon" aria-hidden="true">
+            <i class="fas fa-comment-dots"></i>
+          </div>
+          <div class="assurance-meta">
+            <h4 data-i18n="contactPage.guarantee2Title">Rapid Direct Response</h4>
+            <p data-i18n="contactPage.guarantee2Sub">Immediate personal replies via WhatsApp during studio operating hours.</p>
+          </div>
+        </div>
+
+        <div class="assurance-item">
+          <div class="assurance-icon" aria-hidden="true">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <div class="assurance-meta">
+            <h4 data-i18n="contactPage.guarantee3Title">Trusted Showroom Quality</h4>
+            <p data-i18n="contactPage.guarantee3Sub">Carefully inspected Mediterranean fabrics, premium linen, and secure delivery.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <%- include('../components/footer') %>
+
+  <script src="/js/contactUs.js"></script>
+</body>
+</html>

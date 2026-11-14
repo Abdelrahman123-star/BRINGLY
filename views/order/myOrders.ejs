@@ -1,0 +1,554 @@
+<%- include('../components/header') %>
+
+<div class="orders-container">
+    <div class="orders-header">
+        <h1 data-i18n="myOrdersPage.title">My Orders & Requests</h1>
+        <p data-i18n="myOrdersPage.subtitle">View and track your regular store purchases and custom German sourcing requests</p>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="orders-nav-tabs">
+        <button type="button" class="orders-tab-btn active" onclick="switchTab('storeOrdersSection', this)">
+            <i class="fas fa-shopping-bag"></i> <span data-i18n="myOrdersPage.storePurchases">Store Purchases</span> (<%= orders ? orders.length : 0 %>)
+        </button>
+        <button type="button" class="orders-tab-btn" onclick="switchTab('germanyRequestsSection', this)">
+            <i class="fas fa-clipboard-list" style="color: #C46849;"></i> <span data-i18n="myOrdersPage.sourcingRequests">Sourcing Requests</span> (<%= (requests && requests.length) ? requests.length : 0 %>)
+        </button>
+    </div>
+
+    <!-- Store Orders Section -->
+    <div id="storeOrdersSection" class="orders-tab-content active">
+        <% if (orders && orders.length > 0) { %>
+            <div class="orders-grid">
+                <% orders.forEach(order => { %>
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <div class="order-info">
+                                <h3>Order #<%= order._id.toString().substring(0, 8) %>...</h3>
+                                <span class="order-date"><%= new Date(order.orderDate).toLocaleDateString() %></span>
+                            </div>
+                            <div class="order-status <%= order.orderStatus.toLowerCase() %>">
+                                <%= order.orderStatus %>
+                            </div>
+                        </div>
+
+                        <div class="order-items">
+                            <% order.items.forEach(item => { %>
+                                <div class="order-item">
+                                    <img src="<%= item.imageUrl %>" alt="<%= item.name %>" class="item-image">
+                                    <div class="item-details">
+                                        <h4><%= item.name %></h4>
+                                        <p>Quantity: <%= item.quantity %></p>
+                                        <p class="item-price">$<%= item.priceAtPurchase.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <span data-i18n="myOrdersPage.itemsTotal">Items Total:</span>
+                                <span>$<%= order.totalAmount.toFixed(2) %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span data-i18n="cartPage.shipping">Shipping:</span>
+                                <span>$<%= order.shippingCost ? order.shippingCost.toFixed(2) : '0.00' %></span>
+                            </div>
+                            <div class="summary-row total">
+                                <span data-i18n="cartPage.total">Total:</span>
+                                <span>$<%= order.finalTotal.toFixed(2) %></span>
+                            </div>
+                            <div class="payment-info">
+                                <i class="fas fa-<%= order.paymentMethod === 'Cash' ? 'money-bill' : 'credit-card' %>"></i>
+                                <%= order.paymentMethod %>
+                            </div>
+                        </div>
+
+                        <a href="/order/confirmation/<%= order._id %>" class="view-order-btn">
+                            <span data-i18n="myOrdersPage.viewDetails">View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="no-orders">
+                <i class="fas fa-shopping-bag"></i>
+                <h2 data-i18n="myOrdersPage.noOrders">No Orders Yet</h2>
+                <p data-i18n="myOrdersPage.noOrdersDesc">You haven't placed any store orders yet.</p>
+                <a href="/" class="shop-now-btn" data-i18n="myOrdersPage.startShopping">Start Shopping</a>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Germany Sourcing Requests Section -->
+    <div id="germanyRequestsSection" class="orders-tab-content" style="display: none;">
+        <% if (requests && requests.length > 0) { %>
+            <div class="requests-custom-grid">
+                <% requests.forEach(reqItem => { %>
+                    <div class="germany-card">
+                        <div class="g-card-header">
+                            <div>
+                                <span class="g-code">#<%= reqItem.requestCode %></span>
+                                <span class="g-date"><%= new Date(reqItem.createdAt).toLocaleDateString() %></span>
+                            </div>
+                            <span class="g-status-pill status-<%= reqItem.status.toLowerCase().replace(/[^a-z0-9]/g, '-') %>">
+                                <%= reqItem.status %>
+                            </span>
+                        </div>
+
+                        <div class="g-card-body">
+                            <h3><%= reqItem.productName %></h3>
+                            <span class="g-category-tag"><i class="fas fa-tag"></i> <%= reqItem.category %></span>
+                            <p class="g-specs"><%= reqItem.specifications.length > 100 ? reqItem.specifications.substring(0, 100) + '...' : reqItem.specifications %></p>
+                            
+                            <div class="g-pricing-box">
+                                <% if (reqItem.quotedPrice) { %>
+                                    <div class="g-quote-ready">
+                                        <span class="lbl">Quoted All-Inclusive Price:</span>
+                                        <strong class="val"><%= reqItem.quotedPrice.toLocaleString() %> EGP</strong>
+                                    </div>
+                                <% } else { %>
+                                    <div class="g-quote-pending">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        <span>Our team in Germany is checking prices</span>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="g-card-footer">
+                            <a href="/track-request/<%= reqItem.requestCode %>" class="g-track-btn">
+                                <i class="fas fa-radar"></i> Track Live & Details
+                            </a>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="no-orders">
+                <i class="fas fa-plane-departure" style="color: #ff5722;"></i>
+                <h2>No Germany Sourcing Requests Yet</h2>
+                <p>Can't find a product in Egypt? Request it directly from Germany and we will inspect and ship it to you!</p>
+                <a href="/#germany-request" class="shop-now-btn" style="background: #ff5722;">Request a Product from Germany</a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function switchTab(sectionId, btn) {
+    document.querySelectorAll('.orders-tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.orders-tab-btn').forEach(el => el.classList.remove('active'));
+    
+    const target = document.getElementById(sectionId);
+    if (target) target.style.display = 'block';
+    if (btn) btn.classList.add('active');
+}
+</script>
+
+<style>
+    .orders-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .orders-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .orders-header h1 {
+        color: #333;
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .orders-header p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .orders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 24px;
+    }
+
+    .order-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .order-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .order-card-header {
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-info h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #333;
+    }
+
+    .order-date {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .order-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .order-status.pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .order-status.completed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .order-status.cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .order-items {
+        padding: 20px;
+    }
+
+    .order-item {
+        display: flex;
+        gap: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .order-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .item-details h4 {
+        margin: 0 0 5px 0;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .item-details p {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .item-price {
+        color: #ff5722 !important;
+        font-weight: 500;
+    }
+
+    .order-summary {
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .summary-row.total {
+        font-weight: 600;
+        color: #333;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #ddd;
+    }
+
+    .payment-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .payment-info i {
+        color: #ff5722;
+    }
+
+    .view-order-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        background: #ff5722;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+
+    .view-order-btn:hover {
+        background: #e64a19;
+    }
+
+    .no-orders {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .no-orders i {
+        font-size: 48px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .no-orders h2 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .no-orders p {
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .shop-now-btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #ff5722;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .shop-now-btn:hover {
+        background: #e64a19;
+        transform: translateY(-2px);
+    }
+
+    /* Tabs */
+    .orders-nav-tabs {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 35px;
+    }
+    .orders-tab-btn {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        padding: 10px 24px;
+        border-radius: 9999px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .orders-tab-btn:hover {
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+    .orders-tab-btn.active {
+        background: #1A2238;
+        border-color: #1A2238;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(26, 34, 56, 0.2);
+    }
+
+    /* Germany Cards Grid */
+    .requests-custom-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 24px;
+    }
+    .germany-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+    }
+    .germany-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        border-color: #ff5722;
+    }
+    .g-card-header {
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .g-code {
+        font-family: monospace;
+        font-weight: 700;
+        color: #ff5722;
+        font-size: 15px;
+        display: block;
+    }
+    .g-date {
+        font-size: 12px;
+        color: #64748b;
+        display: block;
+    }
+    .g-status-pill {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 9999px;
+    }
+    .status-pending { background: #fef3c7; color: #b45309; }
+    .status-in-review { background: #e0f2fe; color: #0369a1; }
+    .status-quoted { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .status-sourced-in-germany { background: #f3e8ff; color: #7e22ce; }
+    .status-shipped-to-egypt { background: #e0e7ff; color: #4338ca; }
+    .status-delivered { background: #dcfce7; color: #15803d; }
+    .status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .g-card-body {
+        padding: 20px;
+        flex: 1;
+    }
+    .g-card-body h3 {
+        font-size: 17px;
+        color: #0f172a;
+        margin: 0 0 8px;
+        font-weight: 700;
+    }
+    .g-category-tag {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+    .g-specs {
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 16px;
+    }
+    .g-pricing-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+    .g-quote-ready .lbl {
+        display: block;
+        font-size: 11px;
+        color: #ea580c;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+    .g-quote-ready .val {
+        display: block;
+        font-size: 20px;
+        color: #ff5722;
+        font-weight: 800;
+    }
+    .g-quote-pending {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        font-size: 13px;
+    }
+    .g-quote-pending i {
+        color: #d97706;
+    }
+    .g-card-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+    .g-track-btn {
+        display: block;
+        text-align: center;
+        background: #ff5722;
+        color: #ffffff;
+        font-weight: 700;
+        padding: 10px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .g-track-btn:hover {
+        background: #e64a19;
+    }
+
+    @media (max-width: 768px) {
+        .orders-container {
+            margin: 20px auto;
+            padding: 0 14px;
+        }
+        .orders-header h1 {
+            font-size: 24px;
+        }
+        .orders-grid,
+        .requests-custom-grid {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+        .orders-nav-tabs {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .orders-tab-btn {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .order-card-header,
+        .g-card-header {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    }
+</style>
+
+<%- include('../components/footer') %> 

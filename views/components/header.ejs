@@ -1,0 +1,388 @@
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/Header_Footer.css">
+  <!-- i18n Core Stack -->
+  <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+  <script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
+  <script src="https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="/js/i18n.js"></script>
+</head>
+
+<header class="site-header">
+  <div class="header-inner">
+    <!-- Brand / Logo -->
+    <div class="header-brand">
+      <a href="/" class="logo-link" aria-label="BRINGLY — Personal Travel Sourcing">
+        <div class="bringly-logo-mark">
+          <svg class="bringly-brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Midnight Indigo base badge with Warm Terracotta hairline -->
+            <rect width="44" height="44" rx="12" fill="#1A2238"/>
+            <rect x="0.75" y="0.75" width="42.5" height="42.5" rx="11.25" stroke="#C46849" stroke-opacity="0.38" stroke-width="1.5"/>
+            
+            <!-- Tote Handle (Leather arched carry strap) -->
+            <path d="M16.5 13.5 C16.5 8.5, 27.5 8.5, 27.5 13.5" stroke="#C46849" stroke-width="2.2" stroke-linecap="round"/>
+            
+            <!-- Travel Shopping Carryall Bag Body -->
+            <path d="M11 13.5 H33 L31.2 30.5 C31 32.5, 29.2 34, 27.2 34 H16.8 C14.8 34, 13 32.5, 12.8 30.5 L11 13.5 Z" fill="#FBF9F5"/>
+            
+            <!-- Hand-Carried Luggage Tag Charm with strap -->
+            <path d="M26.5 14 L29.5 17.5" stroke="#C46849" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M28.5 16.5 L31.8 19.8 L30.5 21.1 L27.2 17.8 Z" fill="#C46849"/>
+            <circle cx="28.8" cy="17.5" r="0.6" fill="#FFFFFF"/>
+            
+            <!-- Monogram 'B' embossed on bag front -->
+            <path d="M18 19 H22.6 C24.2 19 25.3 19.8 25.3 21 C25.3 21.9 24.5 22.6 23.5 22.8 C24.8 23.1 25.8 23.9 25.8 25.2 C25.8 26.7 24.4 27.7 22.6 27.7 H18 V19 Z
+                     M19.8 20.6 V22.3 H22.3 C23 22.3 23.6 21.8 23.6 21.4 C23.6 21 23 20.6 22.3 20.6 H19.8 Z
+                     M19.8 23.7 V26.1 H22.5 C23.3 26.1 23.9 25.6 23.9 25 C23.9 24.3 23.3 23.7 22.5 23.7 H19.8 Z" 
+                  fill="#1A2238" fill-rule="evenodd"/>
+                  
+            <!-- Curated Transit Star Accent -->
+            <path d="M34 6 L34.7 8.3 L37 9 L34.7 9.7 L34 12 L33.3 9.7 L31 9 L33.3 8.3 Z" fill="#C46849"/>
+          </svg>
+        </div>
+        <div class="bringly-brand-type">
+          <div class="brand-title-wrap">
+            <span class="logo-text">BRINGLY<span class="logo-dot">.</span></span>
+            <span class="logo-sub">برينجلي</span>
+          </div>
+          <span class="bringly-brand-tagline" data-i18n="nav.tagline">Personal Travel Sourcing</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <form action="/search" method="GET" class="search-form">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" name="term" placeholder="Search products, brands, requests..." data-i18n-placeholder="nav.searchPlaceholder" value="<%= typeof searchTerm !== 'undefined' && searchTerm ? searchTerm : '' %>" autocomplete="off">
+          <button type="submit" class="search-button" aria-label="Search" data-i18n-aria-label="homePage.search.searchButton">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="desktop-nav">
+      <ul class="header_list">
+        <li><a href="/Category" class="nav-item-link" data-i18n="nav.categories">Categories</a></li>
+        <li>
+          <a href="/track-request" class="nav-item-link track-link">
+            <span data-i18n="nav.trackRequest">Track Request</span>
+          </a>
+        </li>
+        <li><a href="/about" class="nav-item-link" data-i18n="nav.aboutUs">About Us</a></li>
+        <li><a href="/contact" class="nav-item-link" data-i18n="nav.contactUs">Contact Us</a></li>
+        <% if (session && session.user && session.user.role === 'admin') { %>
+          <li>
+            <a href="/admin/DashBoard" class="nav-item-link admin-pill-link" title="Admin Dashboard">
+              <i class="fas fa-shield-alt"></i>
+              <span data-i18n="nav.admin">Admin</span>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+
+    <!-- Right-side User Actions -->
+    <div class="user-actions">
+      <% if (session && session.user) { %>
+        <!-- Order History Dropdown Container -->
+        <div class="order-history-container" title="My Orders & Sourcing Requests">
+          <a href="/order/myOrders" class="action-icon-btn order-icon" aria-label="Orders">
+            <i class="fas fa-box"></i>
+          </a>
+          <div class="order-dropdown">
+            <div class="order-dropdown-title">
+              <i class="fas fa-receipt"></i>
+              <span data-i18n="nav.recentOrders">Recent Orders</span>
+            </div>
+            <ul id="order-list">
+              <!-- Orders will be loaded here via JavaScript -->
+              <li data-i18n="nav.noOrders">No orders found.</li>
+            </ul>
+            <div class="order-dropdown-footer">
+              <a href="/order/myOrders" class="order-footer-btn view-orders-btn">
+                <i class="fas fa-shopping-bag"></i> <span data-i18n="nav.viewAllOrders">View All Orders</span>
+              </a>
+              <a href="/track-request" class="order-footer-btn track-requests-btn">
+                <span data-i18n="nav.trackRequest">Track Request</span>
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Concierge Button -->
+        <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I%20would%20like%20to%20inquire%20about%20your%20curated%20collection." 
+           target="_blank" 
+           class="action-icon-btn wa-header-btn" 
+           title="WhatsApp Concierge" 
+           aria-label="WhatsApp Concierge">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+
+        <!-- User Profile Pill & Dropdown -->
+        <div class="user-profile-menu" id="userProfileMenu">
+          <button class="user-profile-btn" id="userProfileBtn" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="user-avatar-initial">
+              <%= session.user.username ? session.user.username.charAt(0).toUpperCase() : 'U' %>
+            </span>
+            <span class="user-display-name">
+              <%= session.user.username ? session.user.username.split(' ')[0] : 'User' %>
+            </span>
+            <% if (session.user.role === 'admin') { %>
+              <span class="user-role-tag">ADMIN</span>
+            <% } %>
+            <i class="fas fa-chevron-down profile-chevron"></i>
+          </button>
+
+          <div class="user-dropdown-panel" id="userDropdownPanel">
+            <div class="dropdown-user-header">
+              <div class="user-header-avatar">
+                <%= session.user.username ? session.user.username.charAt(0).toUpperCase() : 'U' %>
+              </div>
+              <div class="user-header-meta">
+                <div class="user-header-name"><%= session.user.username %></div>
+                <div class="user-header-role">
+                  <% if (session.user.role === 'admin') { %>
+                    <span class="badge-role-admin"><i class="fas fa-shield-alt"></i> <span data-i18n="nav.storeAdmin">Store Administrator</span></span>
+                  <% } else { %>
+                    <span class="badge-role-user"><i class="fas fa-check-circle"></i> <span data-i18n="nav.customer">Customer</span></span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
+            <div class="dropdown-section-divider"></div>
+
+            <div class="user-dropdown-menu-list">
+              <% if (session.user.role === 'admin') { %>
+                <a href="/admin/DashBoard" class="dropdown-menu-item admin-highlight-item">
+                  <i class="fas fa-chart-line"></i>
+                  <div class="item-text">
+                    <span class="item-title" data-i18n="nav.adminDashboard">Admin Dashboard</span>
+                    <span class="item-sub" data-i18n="nav.adminPortal">Store management portal</span>
+                  </div>
+                </a>
+                <a href="/admin/requests" class="dropdown-menu-item">
+                  <i class="fas fa-plane-departure"></i>
+                  <div class="item-text">
+                    <span class="item-title" data-i18n="nav.germanySourcing">Germany Sourcing</span>
+                    <span class="item-sub" data-i18n="nav.customerQuotes">Customer quotes & tracking</span>
+                  </div>
+                </a>
+              <% } %>
+
+              <a href="/order/myOrders" class="dropdown-menu-item">
+                <i class="fas fa-box"></i>
+                <div class="item-text">
+                  <span class="item-title" data-i18n="nav.orders">My Orders</span>
+                  <span class="item-sub" data-i18n="nav.storePurchases">Store purchases & history</span>
+                </div>
+              </a>
+
+              <a href="/track-request" class="dropdown-menu-item">
+                <i class="fas fa-search-location"></i>
+                <div class="item-text">
+                  <span class="item-title" data-i18n="nav.trackSourcingRequest">Track Sourcing Request</span>
+                  <span class="item-sub" data-i18n="nav.liveStatus">Live status & updates</span>
+                </div>
+              </a>
+            </div>
+
+            <div class="dropdown-section-divider"></div>
+
+            <a href="/logout" class="dropdown-logout-item">
+              <i class="fas fa-sign-out-alt"></i>
+              <span data-i18n="nav.logout">Logout</span>
+            </a>
+          </div>
+        </div>
+
+      <% } else { %>
+        <!-- Guest WhatsApp Concierge Button -->
+        <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I%20would%20like%20to%20inquire%20about%20your%20curated%20collection." 
+           target="_blank" 
+           class="action-icon-btn wa-header-btn" 
+           title="WhatsApp Concierge" 
+           aria-label="WhatsApp Concierge">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      <% } %>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Toggle navigation menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer" id="mobileDrawer">
+    <div class="mobile-drawer-inner">
+      <form action="/search" method="GET" class="mobile-search-form">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" name="term" placeholder="Search products..." data-i18n-placeholder="nav.searchProducts" value="<%= typeof searchTerm !== 'undefined' && searchTerm ? searchTerm : '' %>">
+          <button type="submit" class="search-button"><i class="fas fa-arrow-right"></i></button>
+        </div>
+      </form>
+
+      <ul class="mobile-nav-list">
+        <li><a href="/"><i class="fas fa-home"></i> <span data-i18n="nav.home">Home</span></a></li>
+        <li><a href="/Category"><i class="fas fa-th-large"></i> <span data-i18n="nav.categories">Categories</span></a></li>
+        <li><a href="/track-request"><i class="fas fa-search-location"></i> <span data-i18n="nav.trackRequest">Track Request</span></a></li>
+        <li><a href="/about"><i class="fas fa-info-circle"></i> <span data-i18n="nav.aboutUs">About Us</span></a></li>
+        <li><a href="/contact"><i class="fas fa-envelope"></i> <span data-i18n="nav.contactUs">Contact Us</span></a></li>
+        <% if (session && session.user && session.user.role === 'admin') { %>
+          <li class="mobile-admin-item">
+            <a href="/admin/DashBoard"><i class="fas fa-shield-alt"></i> <span data-i18n="nav.adminDashboard">Admin Dashboard</span></a>
+          </li>
+          <li class="mobile-admin-item">
+            <a href="/admin/requests"><i class="fas fa-clipboard-list"></i> <span data-i18n="nav.germanySourcing">Germany Requests</span></a>
+          </li>
+        <% } %>
+        <% if (session && session.user) { %>
+          <li><a href="/order/myOrders"><i class="fas fa-box"></i> <span data-i18n="nav.orders">My Orders</span></a></li>
+          <li><a href="/logout" class="mobile-logout"><i class="fas fa-sign-out-alt"></i> <span data-i18n="nav.logout">Logout</span> (<%= session.user.username %>)</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Function to update cart count
+  function updateCartCount(count) {
+    const cartCount = document.getElementById('cart-count-badge');
+    if (cartCount) {
+      cartCount.textContent = count;
+      cartCount.style.display = count > 0 ? 'flex' : 'none';
+    }
+  }
+
+  // Initialize cart count on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const cartCount = document.getElementById('cart-count-badge');
+    if (cartCount) {
+      const count = parseInt(cartCount.textContent) || 0;
+      updateCartCount(count);
+    }
+
+    // User profile dropdown toggle for mobile/click
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    const userProfileMenu = document.getElementById('userProfileMenu');
+    if (userProfileBtn && userProfileMenu) {
+      userProfileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userProfileMenu.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!userProfileMenu.contains(e.target)) {
+          userProfileMenu.classList.remove('open');
+        }
+      });
+    }
+
+    // Mobile menu toggle
+    const mobileToggleBtn = document.getElementById('mobileToggleBtn');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    if (mobileToggleBtn && mobileDrawer) {
+      mobileToggleBtn.addEventListener('click', function() {
+        mobileDrawer.classList.toggle('open');
+        const icon = mobileToggleBtn.querySelector('i');
+        if (icon) {
+          if (mobileDrawer.classList.contains('open')) {
+            icon.className = 'fas fa-times';
+          } else {
+            icon.className = 'fas fa-bars';
+          }
+        }
+      });
+    }
+
+    // Order history dropdown functionality
+    const orderHistoryContainer = document.querySelector('.order-history-container');
+    const orderDropdown = document.querySelector('.order-dropdown');
+    const orderList = document.getElementById('order-list');
+
+    if (orderHistoryContainer && orderDropdown && orderList) {
+      let ordersLoaded = false;
+
+      orderHistoryContainer.addEventListener('mouseenter', async () => {
+        if (!ordersLoaded) {
+          try {
+            const response = await fetch('/order/api/user-orders', {
+              headers: {
+                'Accept': 'application/json'
+              }
+            });
+            const data = await response.json();
+
+            if (response.ok && data.orders) {
+              orderList.innerHTML = ''; // Clear existing content
+              if (data.orders.length > 0) {
+                data.orders.forEach(order => {
+                  const listItem = document.createElement('div');
+                  listItem.className = 'order-item';
+                  listItem.innerHTML = `
+                    <div class="order-header">
+                      <div class="order-id-status">
+                        <strong>Order #${order.orderId}</strong>
+                        <span class="order-status ${(order.status || '').toLowerCase()}">${order.status}</span>
+                      </div>
+                      <div class="order-date">${order.date}</div>
+                    </div>
+                    <div class="order-items">
+                      ${(order.items || []).map(item => `
+                        <div class="order-product">
+                          <img src="${item.imageUrl || '/images/default-product.png'}" alt="${item.name}" class="product-thumbnail">
+                          <div class="product-details">
+                            <span class="product-name">${item.name}</span>
+                            <span class="product-quantity">x${item.quantity}</span>
+                            <span class="product-price">$${item.price}</span>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                    <div class="order-summary">
+                      <div class="summary-row">
+                        <span>Items:</span>
+                        <span>${order.itemCount}</span>
+                      </div>
+                      <div class="summary-row">
+                        <span>Shipping:</span>
+                        <span>$${order.shippingCost}</span>
+                      </div>
+                      <div class="summary-row total">
+                        <span>Total:</span>
+                        <span>$${order.total}</span>
+                      </div>
+                      <div class="payment-method">
+                        <i class="fas fa-${order.paymentMethod === 'Cash' ? 'money-bill' : 'credit-card'}"></i>
+                        ${order.paymentMethod}
+                      </div>
+                    </div>
+                  `;
+                  orderList.appendChild(listItem);
+                });
+              } else {
+                orderList.innerHTML = '<li>No recent orders found.</li>';
+              }
+              ordersLoaded = true;
+            } else {
+              orderList.innerHTML = `<li>Error: ${data.message || 'Failed to load orders.'}</li>`;
+            }
+          } catch (error) {
+            console.error('Error fetching orders:', error);
+            orderList.innerHTML = '<li>Error loading orders. Please try again later.</li>';
+          }
+        }
+      });
+    }
+  });
+</script>

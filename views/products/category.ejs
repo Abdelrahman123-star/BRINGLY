@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="categoryPage.title">Shop by Category — BRINGLY</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Link to CSS file -->
+  <link rel="stylesheet" href="/css/category.css">
+</head>
+<body>
+  <!-- Header -->
+  <%- include('../components/header') %>
+  <%- include('../components/backButton') %>
+
+  <main class="category-container">
+    <div class="category-page-header">
+      <span class="category-page-kicker" data-i18n="categoryPage.kicker">Curated Collections</span>
+      <h1 class="category-page-title" data-i18n="categoryPage.pageTitle">Shop by Category</h1>
+      <p class="category-page-sub" data-i18n="categoryPage.pageSub">Explore authentic European products hand-carried from Germany to Egypt.</p>
+    </div>
+
+    <section class="category-grid">
+      <% if (categories && categories.length > 0) { %>
+        <% categories.forEach(category => { %>
+          <div class="category-card" onclick="window.location.href='/products/<%= category.slug %>'">
+            <div class="category-image">
+              <% if (category.imageUrl || category.imagePath) { %>
+                <img src="<%= category.imageUrl || category.imagePath %>" alt="<%= category.name %>">
+              <% } else { %>
+                <img src="/imgs/default-category.jpg" alt="<%= category.name %>">
+              <% } %>
+
+              <div class="category-actions">
+                <button class="action-button" title="Quick View" data-i18n-title="categoryPage.categoryCard.quickView">
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+            <div class="category-info">
+              <h3><%= category.name %></h3>
+              <p class="category-description"><%= category.description || '' %></p>
+
+              <div class="category-stats">
+                <div class="stat-item">
+                  <i class="fas fa-box"></i>
+                  <span><%= category.productCount || 0 %> <span data-i18n="categoryPage.categoryCard.products">Products</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="no-categories">
+          <i class="fas fa-folder-open"></i>
+          <h3 data-i18n="categoryPage.noCategories.title">No Categories Found</h3>
+          <p data-i18n="categoryPage.noCategories.description">There are no categories available at the moment.</p>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <%- include('../components/footer') %>
+
+  <!-- Link to JavaScript file -->
+  <script src="/js/category.js"></script>
+</body>
+</html>

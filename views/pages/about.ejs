@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="aboutPage.title">About Us — BRINGLY</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/aboutUs.css">
+</head>
+<body>
+  <%- include('../components/header') %>
+  <%- include('../components/backButton') %>
+
+  <main class="about-page-wrapper">
+    <!-- Hero Story Card -->
+    <section class="about-hero-card">
+      <span class="about-kicker" data-i18n="aboutPage.kicker">Personal German-to-Egypt Shopping</span>
+      <h1>
+        <span data-i18n="aboutPage.welcome.title">Welcome to</span>
+        <span class="highlight" data-i18n="aboutPage.welcome.highlight">BRINGLY</span>
+      </h1>
+      <p class="about-lead" data-i18n="aboutPage.welcome.description">
+        Whenever we travel to Germany, we personally hand-select original European products—from pro tennis gear and cosmetics to electronics and fashion—and bring them straight to Egypt. Browse our ready-to-deliver collection or request any specific item for our next trip.
+      </p>
+      <div class="about-cta-group">
+        <a href="/products" class="btn-about-primary">
+          <i class="fas fa-shopping-bag"></i>
+          <span data-i18n="aboutPage.cta.browseStock">Browse Ready Stock</span>
+        </a>
+        <a href="/#germany-request" class="btn-about-primary">
+          <i class="fas fa-paper-plane"></i>
+          <span data-i18n="aboutPage.cta.requestItem">Request an Item</span>
+        </a>
+        <a href="https://wa.me/201006709258?text=<%= encodeURIComponent('Hello BRINGLY! I would like to ask about available products and upcoming trips.') %>" target="_blank" rel="noopener noreferrer" class="btn-about-wa">
+          <i class="fab fa-whatsapp"></i>
+          <span data-i18n="aboutPage.cta.chatWhatsApp">Chat on WhatsApp</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 3 Pillars -->
+    <div class="about-section-header">
+      <h2 data-i18n="aboutPage.howItWorks.title">How BRINGLY Works</h2>
+      <p data-i18n="aboutPage.howItWorks.subtitle">Simple, transparent, and personal—no complicated customs paperwork or middlemen.</p>
+    </div>
+
+    <section class="about-pillars-grid">
+      <article class="about-pillar-card">
+        <div class="pillar-icon">
+          <i class="fas fa-certificate"></i>
+        </div>
+        <h3 data-i18n="aboutPage.features.bestDeals.title">100% Authentic German Retail</h3>
+        <p data-i18n="aboutPage.features.bestDeals.description">
+          Every product is purchased directly from official stores in Germany and inspected in person before we fly back to Egypt.
+        </p>
+        <a href="/products" class="pillar-link">
+          <span data-i18n="aboutPage.features.bestDeals.cta">Explore Products</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </article>
+
+      <article class="about-pillar-card">
+        <div class="pillar-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <h3 data-i18n="aboutPage.features.fastDelivery.title">Custom Product Requests</h3>
+        <p data-i18n="aboutPage.features.fastDelivery.description">
+          Looking for something specific from Amazon.de, Zalando, Sephora, or Douglas? Submit a request and receive an all-inclusive EGP quote.
+        </p>
+        <a href="/#germany-request" class="pillar-link">
+          <span data-i18n="aboutPage.features.fastDelivery.cta">Request a Product</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </article>
+
+      <article class="about-pillar-card">
+        <div class="pillar-icon">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+        <h3 data-i18n="aboutPage.features.support.title">Direct WhatsApp Updates</h3>
+        <p data-i18n="aboutPage.features.support.description">
+          Track your request live with your 6-digit reference code or message us directly on WhatsApp at +(20) 100 670 9258 anytime.
+        </p>
+        <a href="/track-request" class="pillar-link">
+          <span data-i18n="aboutPage.features.support.cta">Track a Request</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </article>
+    </section>
+
+    <!-- Bottom Callout -->
+    <section class="about-story-banner">
+      <div class="story-banner-text">
+        <h3 data-i18n="aboutPage.storyBanner.title">Have a special item in mind for our next trip?</h3>
+        <p data-i18n="aboutPage.history">
+          Send us the product name or link on WhatsApp and we will confirm availability and final price in Egypt.
+        </p>
+      </div>
+      <a href="https://wa.me/201006709258?text=<%= encodeURIComponent('Hello BRINGLY! I want to inquire about requesting a product from Germany.') %>" target="_blank" rel="noopener noreferrer" class="btn-about-wa">
+        <i class="fab fa-whatsapp"></i>
+        <span>+(20) 100 670 9258</span>
+      </a>
+    </section>
+  </main>
+
+  <%- include('../components/footer') %>
+</body>
+</html>

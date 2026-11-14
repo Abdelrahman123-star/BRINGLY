@@ -1,0 +1,248 @@
+      <%- include('adminComponents/head') %>
+<body>
+  <div class="admin-container">
+
+         <%- include('adminComponents/header') %>
+         <%- include('adminComponents/slideBar') %>
+         <%- include('adminComponents/switchLanguage') %>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Dashboard Overview -->
+      <section id="dashboard" class="dashboard-overview">
+        <h2 data-i18n="adminDashboard.overview.title">Dashboard Overview</h2>
+        <div class="overview-cards">
+          <div class="card">
+            <i class="fas fa-box"></i>
+            <h3 data-i18n="adminDashboard.overview.totalProducts">Total Products</h3>
+            <p><%= stats.totalProducts %></p>
+          </div>
+          <div class="card">
+            <i class="fas fa-shopping-cart"></i>
+            <h3 data-i18n="adminDashboard.overview.totalOrders">Total Orders</h3>
+            <p><%= stats.totalOrders %></p>
+          </div>
+          <div class="card">
+            <i class="fas fa-users"></i>
+            <h3 data-i18n="adminDashboard.overview.totalUsers">Total Users</h3>
+            <p><%= stats.totalUsers %></p>
+          </div>
+          <div class="card">
+            <i class="fas fa-dollar-sign"></i>
+            <h3 data-i18n="adminDashboard.overview.totalRevenue">Total Revenue</h3>
+            <p>EGP <%= stats.totalRevenue %></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Orders -->
+      <section class="dashboard-section">
+        <h2 data-i18n="adminDashboard.recentOrders.title">Recent Orders</h2>
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th data-i18n="adminDashboard.recentOrders.orderId">Order ID</th>
+                <th data-i18n="adminDashboard.recentOrders.customer">Customer</th>
+                <th data-i18n="adminDashboard.recentOrders.date">Date</th>
+                <th data-i18n="adminDashboard.recentOrders.amount">Amount</th>
+                <th data-i18n="adminDashboard.recentOrders.status">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (recentOrders && recentOrders.length > 0) { %>
+                <% recentOrders.forEach(order => { %>
+                  <tr>
+                    <td>#<%= order._id.toString().slice(-6) %></td>
+                    <td><%= order.user ? order.user.username : 'Unknown User' %></td>
+                    <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                    <td>EGP <%= order.totalAmount.toFixed(2) %></td>
+                    <td>
+                      <span class="status-badge status-<%= order.orderStatus.toLowerCase() %>">
+                        <%= order.orderStatus %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="no-data" data-i18n="adminDashboard.recentOrders.noOrders">No recent orders</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Low Stock Products -->
+      <section class="dashboard-section">
+        <h2 data-i18n="adminDashboard.lowStock.title">Low Stock Products</h2>
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th data-i18n="adminDashboard.lowStock.productName">Product Name</th>
+                <th data-i18n="adminDashboard.lowStock.currentStock">Current Stock</th>
+                <th data-i18n="adminDashboard.lowStock.price">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (lowStockProducts && lowStockProducts.length > 0) { %>
+                <% lowStockProducts.forEach(product => { %>
+                  <tr>
+                    <td><%= product.name %></td>
+                    <td>
+                      <span class="stock-badge <%= product.stock < 5 ? 'critical' : 'warning' %>">
+                        <%= product.stock %>
+                      </span>
+                    </td>
+                    <td>EGP <%= product.price.toFixed(2) %></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="no-data" data-i18n="adminDashboard.lowStock.noProducts">No low stock products</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Top Selling Products -->
+      <section class="dashboard-section">
+        <h2 data-i18n="adminDashboard.topSelling.title">Top Selling Products</h2>
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th data-i18n="adminDashboard.topSelling.productName">Product Name</th>
+                <th data-i18n="adminDashboard.topSelling.totalSold">Total Sold</th>
+                <th data-i18n="adminDashboard.topSelling.currentStock">Current Stock</th>
+                <th data-i18n="adminDashboard.topSelling.price">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (topSellingProducts && topSellingProducts.length > 0) { %>
+                <% topSellingProducts.forEach(item => { %>
+                  <tr>
+                    <td><%= item.productDetails.name %></td>
+                    <td><%= item.totalSold %></td>
+                    <td><%= item.productDetails.stock %></td>
+                    <td>EGP <%= item.productDetails.price.toFixed(2) %></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="no-data" data-i18n="adminDashboard.topSelling.noData">No sales data available</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <style>
+    .dashboard-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .dashboard-section h2 {
+      font-size: 1.5rem;
+      color: #2d3436;
+      margin-bottom: 1.5rem;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .dashboard-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2d3436;
+    }
+
+    .status-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-processing { background: #cce5ff; color: #004085; }
+    .status-shipped { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+
+    .stock-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .stock-badge.critical { background: #f8d7da; color: #721c24; }
+    .stock-badge.warning { background: #fff3cd; color: #856404; }
+
+    .btn-edit {
+      padding: 0.5rem 1rem;
+      background: #00b894;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.3s ease;
+    }
+
+    .btn-edit:hover {
+      background: #00a884;
+    }
+
+    .no-data {
+      text-align: center;
+      color: #666;
+      padding: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-section {
+        padding: 1rem;
+      }
+
+      .dashboard-table th,
+      .dashboard-table td {
+        padding: 0.8rem;
+      }
+    }
+  </style>
+
+  <!-- Add i18next and plugins from CDN -->
+  <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+  <script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
+  <script src="https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="/js/i18n.js"></script>
+</body>
+</html>

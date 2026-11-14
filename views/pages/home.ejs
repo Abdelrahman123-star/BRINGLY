@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="homePage.title">BRINGLY — Curated Sourcing & Authentic German Goods</title>
+    <!-- Add i18next and plugins from CDN -->
+    <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+    <script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
+    <script src="https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Distinctive Typographic System -->
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Albert+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/homePage.css"> 
+</head>
+<body>
+<div class="scroll-progress"></div>
+
+  <%- include('../components/header', { isHomePage: true }) %>
+
+
+
+
+<!-- Carousel Hero -->
+<section class="carousel-hero">
+  <div class="carousel-container">
+    <div class="carousel-inner">
+      
+      <!-- Slide 1: Tennis & Court Collection -->
+      <div class="carousel-slide active">
+        <img src="/imgs/atelier-tennis-banner.jpg" alt="Tennis & Court Collection">
+        <div class="carousel-caption">
+          <h1 data-i18n="homePage.carousel.tennis.title">The Grand Slam Club Collection</h1>
+          <p data-i18n="homePage.carousel.tennis.description">Precision tennis racquets, premium court apparel, and bespoke sports gear. Inquire directly on WhatsApp for sourcing and private sets.</p>
+          <div class="carousel-cta-row">
+            <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I'm%20browsing%20your%20Tennis%20racquets%20and%20sports%20gear%20from%20Germany." 
+               target="_blank" 
+               class="carousel-wa-btn">
+              <i class="fab fa-whatsapp"></i>
+              <span data-i18n="common.inquireOnWa">Inquire on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Luxury Makeup & Beauty Essentials -->
+      <div class="carousel-slide">
+        <img src="/imgs/atelier-makeup-banner.jpg" alt="Prestige Beauty & Essential Cosmetics">
+        <div class="carousel-caption">
+          <h1 data-i18n="homePage.carousel.makeup.title">Prestige Beauty & Essential Cosmetics</h1>
+          <p data-i18n="homePage.carousel.makeup.description">Curated luxury lipsticks, radiant compacts, and signature fragrances. Connect on WhatsApp for shade recommendations and orders.</p>
+          <div class="carousel-cta-row">
+            <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I'm%20interested%20in%20your%20cosmetics%20and%20beauty%20selection%20from%20Germany." 
+               target="_blank" 
+               class="carousel-wa-btn">
+              <i class="fab fa-whatsapp"></i>
+              <span data-i18n="common.inquireOnWa">Consult on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Heritage Apparel (Preserved) -->
+      <div class="carousel-slide">
+        <img src="/imgs/atelier-banner-1.jpg" alt="Atelier Collection">
+        <div class="carousel-caption">
+          <h1 data-i18n="homePage.carousel.sale.title">Woven with Heritage. Tailored for Today.</h1>
+          <p data-i18n="homePage.carousel.sale.description">Bespoke apparel & 100% Egyptian linens. Contact our styling concierge directly on WhatsApp for sizing and private orders.</p>
+          <div class="carousel-cta-row">
+            <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I'd%20like%20to%20inquire%20about%20your%20curated%20collection." 
+               target="_blank" 
+               class="carousel-wa-btn">
+              <i class="fab fa-whatsapp"></i>
+              <span data-i18n="common.inquireOnWa">Consult on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commented Out Old Banner: The Summer Capsule '26 (Preserved per request) -->
+      <!--
+      <div class="carousel-slide">
+        <img src="/imgs/atelier-banner-2.jpg" alt="Atelier Craftsmanship">
+        <div class="carousel-caption">
+          <h1 data-i18n="homePage.carousel.newArrivals.title">The Summer Capsule '26</h1>
+          <p data-i18n="homePage.carousel.newArrivals.description">Sculptural silhouettes, relaxed resort cuts, and refined earth tones. Connect on WhatsApp for bespoke measurements.</p>
+          <div class="carousel-cta-row">
+            <a href="https://wa.me/201006709258?text=Hello!%20I'm%20interested%20in%20the%20Summer%20Capsule%20collection%20and%20custom%20fittings." 
+               target="_blank" 
+               class="carousel-wa-btn">
+              <i class="fab fa-whatsapp"></i>
+              <span>Inquire on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      -->
+
+    </div>
+    <button class="carousel-nav prev" onclick="prevSlide()" aria-label="Previous Slide">&#10094;</button>
+    <button class="carousel-nav next" onclick="nextSlide()" aria-label="Next Slide">&#10095;</button>
+  </div>
+  <div class="carousel-indicators">
+    <span class="indicator active" onclick="goToSlide(0)"></span>
+    <span class="indicator" onclick="goToSlide(1)"></span>
+    <span class="indicator" onclick="goToSlide(2)"></span>
+  </div>
+</section>
+
+<section class="featured-products-modern">
+  <div class="fp-header">
+    <h2 data-i18n="homePage.featuredProducts.title">Curated Essentials</h2>
+  </div>
+
+  <div class="fp-carousel">
+    <% if (featuredProducts && featuredProducts.length > 0) { %>
+      <% featuredProducts.forEach(function(product) { %>
+        <article class="fp-product" onclick="window.location.href='/products/detail/<%= product._id %>'">
+          <div class="fp-img-container">
+            <% if (product.imageUrl && product.imageUrl.trim() !== '') { %>
+              <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
+            <% } else if (product.imagePath && product.imagePath.trim() !== '') { %>
+              <img src="<%= product.imagePath %>" alt="<%= product.name %>" loading="lazy">
+            <% } else { %>
+              <img src="/imgs/img-notfound.jpg" alt="Image Not Found" loading="lazy">
+            <% } %>
+
+            <div class="fp-overlay"></div>
+            <span class="fp-quick-view" data-i18n="homePage.featuredProducts.quickView">View Details</span>
+          </div>
+          
+          <div class="fp-details">
+            <span class="fp-tag" data-i18n="productsCatalog.atelierSelection">Atelier Selection</span>
+            <h3 class="fp-product-title"><%= product.name %></h3>
+            
+            <div class="fp-wa-action">
+              <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello! I am interested in ${product.name}. Could you share more details?`) %>" 
+                 target="_blank" 
+                 onclick="event.stopPropagation();"
+                 class="fp-wa-btn" 
+                 title="Inquire on WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+                <span data-i18n="common.inquireOnWa">Inquire on WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    <% } else { %>
+      <p class="fp-empty" data-i18n="homePage.featuredProducts.noProducts">No featured products available</p>
+    <% } %>
+
+  </div>
+</section>
+
+      <!-- Category Sections -->
+      <section class="categories">
+          
+        <h2 data-i18n="homePage.categories.title">Curated Collections</h2>
+        <div class="category-grid">
+          <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+              <a href="/products/<%= category.slug %>">
+                <div class="category-card">
+                  <div class="category-image">
+                    <% if (category.imageUrl || category.imagePath) { %>
+                      <img src="<%= category.imageUrl || category.imagePath %>" alt="<%= category.name %>">
+                    <% } else { %>
+                      <img src="/imgs/default-category.jpg" alt="<%= category.name %>">
+                    <% } %>
+                  </div>
+                  <h3><%= category.name %></h3>
+                </div>
+              </a>
+            <% }) %>
+          <% } %>
+        </div>
+        <div class="see-all-container">
+          <a href="/category" class="see-all-btn" data-i18n="homePage.categories.seeAll">View All Collections</a>
+        </div>
+      </section>
+
+      <!-- Bespoke Sourcing & European Concierge Section -->
+      <section id="germany-request" class="germany-request-hero search-hero">
+        <div class="search-hero-content">
+          <h2 class="search-hero-title">
+            <span class="title-main" data-i18n="sourcingForm.titleMain">Bespoke Sourcing & </span>
+            <span class="title-highlight" data-i18n="sourcingForm.titleHighlight">European Concierge</span>
+          </h2>
+          <p class="search-hero-subtitle" data-i18n="sourcingForm.subtitle">
+            Looking for authentic European apparel, rare designer items, or specialty goods? Share a reference or paste any product link, and we will inspect, acquire, and hand-deliver it directly to you.
+          </p>
+
+          <div class="request-card-container">
+            <form id="germanyRequestForm" action="/request-product" method="POST">
+              <div class="request-glass-card">
+                <div class="card-header-badge">
+                  <i class="fas fa-clipboard-list"></i>
+                  <span data-i18n="sourcingForm.badge">Custom Sourcing Request Form</span>
+                </div>
+
+                <!-- Form Grid -->
+                <div class="request-form-grid">
+                  <!-- Product Name -->
+                  <div class="form-field full-width">
+                    <label for="reqProductName"><span data-i18n="sourcingForm.productName">Product Name or Model</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-box-open field-icon"></i>
+                      <input type="text" id="reqProductName" name="productName" 
+                             data-i18n-placeholder="sourcingForm.productNamePlaceholder"
+                             placeholder="e.g. Braun Series 9 Pro, Dyson Airwrap, Sony Headphones, European Fashion..." 
+                             required autocomplete="off">
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="form-field">
+                    <label for="reqCategory"><span data-i18n="sourcingForm.category">Category</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-tags field-icon"></i>
+                      <select id="reqCategory" name="category" required>
+                        <option value="" disabled selected data-i18n="sourcingForm.categorySelect">Select category...</option>
+                        <option value="Tennis & Sports Gear" data-i18n="sourcingForm.catTennis">🎾 Tennis & Sports Gear</option>
+                        <option value="Electronics & Tech" data-i18n="sourcingForm.catTech">📱 Electronics & Tech</option>
+                        <option value="Fashion, Shoes & Bags" data-i18n="sourcingForm.catFashion">👟 Fashion, Shoes & Bags</option>
+                        <option value="Perfumes & Cosmetics" data-i18n="sourcingForm.catPerfumes">🧴 Perfumes & Cosmetics</option>
+                        <option value="Watches & Accessories" data-i18n="sourcingForm.catWatches">⌚ Watches & Accessories</option>
+                        <option value="Home & Kitchen Appliances" data-i18n="sourcingForm.catHome">☕ Home & Kitchen Appliances</option>
+                        <option value="Other Sourcing" data-i18n="sourcingForm.catOther">✨ Other / Custom Item</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Target Budget -->
+                  <div class="form-field">
+                    <label for="reqTargetBudget"><span data-i18n="sourcingForm.targetBudget">Target Budget (EGP)</span> <span class="optional-tag" data-i18n="sourcingForm.optional">Optional</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-money-bill-wave field-icon"></i>
+                      <input type="number" id="reqTargetBudget" name="targetBudget" 
+                             data-i18n-placeholder="sourcingForm.budgetPlaceholder"
+                             placeholder="Your estimated budget in EGP" min="0">
+                    </div>
+                  </div>
+
+                  <!-- Reference Link -->
+                  <div class="form-field full-width">
+                    <label for="reqReferenceUrl"><span data-i18n="sourcingForm.referenceUrl">Reference Link or Amazon.de URL</span> <span class="optional-tag" data-i18n="sourcingForm.optional">Optional</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-link field-icon"></i>
+                      <input type="url" id="reqReferenceUrl" name="referenceUrl" 
+                             data-i18n-placeholder="sourcingForm.urlPlaceholder"
+                             placeholder="Paste link from Amazon.de, Otto, or manufacturer website...">
+                    </div>
+                  </div>
+
+                  <!-- Specifications -->
+                  <div class="form-field full-width">
+                    <label for="reqSpecifications"><span data-i18n="sourcingForm.specs">Exact Specifications & Details</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon textarea-wrapper">
+                      <i class="fas fa-align-left field-icon textarea-icon"></i>
+                      <textarea id="reqSpecifications" name="specifications" rows="3" 
+                                data-i18n-placeholder="sourcingForm.specsPlaceholder"
+                                placeholder="Specify size, color, model details, technical specs, quantity, or any notes for our team in Germany..." 
+                                required></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Customer Name -->
+                  <div class="form-field">
+                    <label for="reqCustomerName"><span data-i18n="sourcingForm.fullName">Your Full Name</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-user field-icon"></i>
+                      <input type="text" id="reqCustomerName" name="customerName" 
+                             value="<%= (session && session.user && session.user.username) ? session.user.username : '' %>"
+                             data-i18n-placeholder="sourcingForm.namePlaceholder"
+                             placeholder="e.g. Ahmed Hassan" required>
+                    </div>
+                  </div>
+
+                  <!-- Customer Phone / WhatsApp -->
+                  <div class="form-field">
+                    <label for="reqCustomerPhone"><span data-i18n="sourcingForm.phone">WhatsApp / Phone Number</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon">
+                      <i class="fab fa-whatsapp field-icon whatsapp-green"></i>
+                      <input type="tel" id="reqCustomerPhone" name="customerPhone" 
+                             value="<%= (session && session.user && session.user.phone) ? session.user.phone : '' %>"
+                             data-i18n-placeholder="sourcingForm.phonePlaceholder"
+                             placeholder="e.g. 01012345678" required>
+                    </div>
+                  </div>
+
+                  <!-- Customer Email -->
+                  <div class="form-field full-width">
+                    <label for="reqCustomerEmail"><span data-i18n="sourcingForm.email">Email Address</span> <span class="required-star">*</span></label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-envelope field-icon"></i>
+                      <input type="email" id="reqCustomerEmail" name="customerEmail" 
+                             value="<%= (session && session.user && session.user.email) ? session.user.email : '' %>"
+                             data-i18n-placeholder="sourcingForm.emailPlaceholder"
+                             placeholder="e.g. name@example.com" required>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="request-submit-row">
+                  <button type="submit" id="submitRequestBtn" class="hero-request-btn">
+                    <span class="btn-text"><i class="fas fa-paper-plane"></i> <span data-i18n="sourcingForm.submitBtn">Submit Sourcing Request</span></span>
+                    <span class="btn-spinner" style="display:none;"><i class="fas fa-spinner fa-spin"></i> <span data-i18n="sourcingForm.processing">Processing...</span></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Trust Features Bar -->
+          <div class="hero-features-bar">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fas fa-check-double"></i></div>
+              <div class="feature-info">
+                <strong data-i18n="sourcingForm.feature1Title">100% Authentic European Sourcing</strong>
+                <span data-i18n="sourcingForm.feature1Sub">Inspected & acquired from verified boutiques</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fab fa-whatsapp"></i></div>
+              <div class="feature-info">
+                <strong data-i18n="sourcingForm.feature2Title">Direct WhatsApp Quotes</strong>
+                <span data-i18n="sourcingForm.feature2Sub">Transparent quotes with customs cleared</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fas fa-door-open"></i></div>
+              <div class="feature-info">
+                <strong data-i18n="sourcingForm.feature3Title">Doorstep Delivery</strong>
+                <span data-i18n="sourcingForm.feature3Sub">Delivered anywhere across Egypt</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Success Confirmation Modal -->
+      <div id="requestSuccessModal" class="request-modal-backdrop" style="display:none;">
+        <div class="request-modal-content">
+          <div class="modal-icon-circle">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: #1A2238;" data-i18n="sourcingForm.modalSuccess">Request Received Successfully!</h2>
+          <p class="modal-subtitle" data-i18n="sourcingForm.modalSubtitle">Our team in Germany has received your request and will source your item.</p>
+          
+          <div class="request-code-badge">
+            <span data-i18n="sourcingForm.modalCodeLabel">Tracking Reference Code:</span>
+            <strong id="modalRequestCode" style="color: #C46849;">#DE-000000</strong>
+          </div>
+
+          <div style="margin-bottom: 1.25rem;">
+            <a id="modalTrackLink" href="/track-request" class="modal-track-btn" style="display:block; background: #1A2238; color:#ffffff; padding:12px 24px; border-radius:9999px; font-weight:600; text-decoration:none; box-shadow: 0 4px 15px rgba(26, 34, 56, 0.2); transition: background 0.2s ease;">
+              <i class="fas fa-radar"></i> <span data-i18n="sourcingForm.modalTrackBtn">Track Live Request Status</span>
+            </a>
+          </div>
+
+          <div class="modal-whatsapp-box">
+            <p data-i18n="sourcingForm.modalWaText">We sent a receipt to your email. You can also chat directly on WhatsApp:</p>
+            <a id="modalWhatsAppLink" href="#" target="_blank" class="modal-whatsapp-btn">
+              <i class="fab fa-whatsapp"></i> <span data-i18n="sourcingForm.modalWaBtn">Chat with Us on WhatsApp</span>
+            </a>
+          </div>
+
+          <button type="button" id="closeRequestModalBtn" class="modal-close-btn" data-i18n="sourcingForm.modalDone">Done</button>
+        </div>
+      </div>
+
+      <%- include('../components/footer') %>
+
+      <script src="/js/homePage.js"></script>
+
+<!-- Add Notification Toast -->
+<div id="notification" class="notification">
+    <div class="notification-content">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message"></span>
+    </div>
+</div>
+
+<style>
+/* Notification Styles (Atelier Theme) */
+.notification {
+    position: fixed;
+    top: 24px;
+    right: 20px;
+    background: #1A2238;
+    color: #FBF9F5;
+    font-family: var(--font-sans);
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 1px solid #E8E0D5;
+    box-shadow: 0 12px 32px -4px rgba(26, 34, 56, 0.18);
+    transform: translateX(130%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2000;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.notification i {
+    font-size: 15px;
+    color: #C46849;
+}
+
+/* Add to Cart Button Animation */
+.fp-atc {
+    position: relative;
+    overflow: hidden;
+}
+
+.fp-atc.loading {
+    pointer-events: none;
+}
+
+.fp-atc.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    animation: loading 1s infinite;
+}
+
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButtons = document.querySelectorAll('.fp-atc');
+    const notification = document.getElementById('notification');
+    const notificationMessage = document.getElementById('notification-message');
+
+    function showNotification(message, isError = false) {
+        notification.style.background = isError ? '#e74c3c' : '#2ecc71';
+        notificationMessage.textContent = message;
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    async function addToCart(productId) {
+        const button = document.querySelector(`.fp-atc[data-product-id="${productId}"]`);
+        button.classList.add('loading');
+
+        try {
+            const response = await fetch('/myCart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
+                }
+                throw new Error(data.error || 'Failed to add item to cart');
+            }
+
+            if (data.success) {
+                showNotification(data.message);
+                // Update cart count in header
+                const cartCount = document.querySelector('.cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.cart.totalItems;
+                    cartCount.style.display = data.cart.totalItems > 0 ? 'inline' : 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(error.message, true);
+        } finally {
+            button.classList.remove('loading');
+        }
+    }
+
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const productId = e.currentTarget.dataset.productId;
+            addToCart(productId);
+        });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1136 @@
+<%- include('../components/header') %>
+
+<div class="track-page-wrapper">
+  <!-- Ambient background glow elements -->
+  <div class="track-bg-glow glow-1"></div>
+  <div class="track-bg-glow glow-2"></div>
+
+  <div class="track-container">
+    <!-- Header Hero -->
+    <div class="track-hero-header">
+      <h1 data-i18n="trackPage.heroTitle">Track Sourcing Request</h1>
+      <p class="track-hero-subtitle" data-i18n="trackPage.heroSub">
+        Enter your 6-digit tracking code (e.g. <strong>DE-123456</strong>) or phone number to view live progress, prices, and flight details.
+      </p>
+
+      <!-- Search Box Form -->
+      <form action="/track-request" method="GET" class="track-search-form">
+        <div class="search-input-group">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" name="code" value="<%= searchQuery || '' %>" 
+                 data-i18n-placeholder="trackPage.inputPlaceholder"
+                 placeholder="Enter Request Code (e.g. DE-123456) or Phone Number..." 
+                 required autocomplete="off">
+          <button type="submit" class="search-btn">
+            <i class="fas fa-radar"></i>
+            <span data-i18n="trackPage.trackBtn">Track Live</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Alert / Not Found Message -->
+    <% if (notFound) { %>
+      <div class="track-alert not-found-alert">
+        <div class="alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="alert-content">
+          <h4 data-i18n="trackPage.notFoundTitle">No Request Found</h4>
+          <p>We couldn't find any request matching <strong>"<%= searchQuery %>"</strong>. Please check your reference code or phone number.</p>
+          <a href="/#germany-request" class="alert-action-link" data-i18n="trackPage.newRequestLink">Need to submit a new request? Click here</a>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Active Request Tracking Dashboard -->
+    <% if (request) { %>
+      <%
+        // Steps setup: 1: Pending, 2: In Review, 3: Quoted, 4: Sourced in Germany, 5: Shipped to Egypt, 6: Delivered
+        const statusMap = {
+          'Pending': 1,
+          'In Review': 2,
+          'Quoted': 3,
+          'Sourced in Germany': 4,
+          'Shipped to Egypt': 5,
+          'Delivered': 6,
+          'Cancelled': -1
+        };
+        const currentStep = statusMap[request.status] || 1;
+        
+        // Build customer WhatsApp message to confirm quote
+        let cleanPhone = request.customerPhone.replace(/[^0-9]/g, '');
+        if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
+        if (!cleanPhone.startsWith('20') && cleanPhone.startsWith('1')) cleanPhone = '20' + cleanPhone;
+        const confirmMsg = encodeURIComponent(`Hello BRINGLY team! Regarding my Germany request #${request.requestCode} for "${request.productName}": I saw the quoted price of ${request.quotedPrice ? request.quotedPrice.toLocaleString() + ' EGP' : 'my quote'} and I'd like to confirm the order!`);
+        const waConfirmLink = `https://wa.me/201006709258?text=${confirmMsg}`;
+      %>
+
+      <div class="request-dashboard-card">
+        <!-- Top Info Header -->
+        <div class="dashboard-header-row">
+          <div class="code-and-title">
+            <div class="code-badge">
+              <span data-i18n="trackPage.trackingCode">Tracking Code:</span>
+              <strong>#<%= request.requestCode %></strong>
+            </div>
+            <h2><%= request.productName %></h2>
+            <div class="meta-row">
+              <span class="meta-item"><i class="fas fa-tag"></i> <%= request.category %></span>
+              <span class="meta-item"><i class="far fa-calendar-alt"></i> Submitted <%= new Date(request.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+            </div>
+          </div>
+
+          <div class="status-badge-container">
+            <span class="current-status-pill status-<%= request.status.toLowerCase().replace(/[^a-z0-9]/g, '-') %>">
+              <span class="pulse-dot"></span>
+              <%= request.status %>
+            </span>
+          </div>
+        </div>
+
+        <!-- 6-Stage Visual Timeline Progress Bar -->
+        <% if (request.status !== 'Cancelled') { %>
+          <div class="timeline-container">
+            <div class="timeline-track">
+              <div class="timeline-progress-fill" style="width: <%= Math.min(100, Math.max(0, ((currentStep - 1) / 5) * 100)) %>%;"></div>
+            </div>
+
+            <div class="timeline-steps">
+              <!-- Step 1 -->
+              <div class="step-node <%= currentStep >= 1 ? 'completed' : '' %> <%= currentStep === 1 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepPending">Submitted</div>
+                  <div class="node-desc">Request received</div>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="step-node <%= currentStep >= 2 ? 'completed' : '' %> <%= currentStep === 2 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-search-dollar"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepReview">Reviewing</div>
+                  <div class="node-desc">Checking stock in Germany</div>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="step-node <%= currentStep >= 3 ? 'completed' : '' %> <%= currentStep === 3 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-tags"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepQuoted">Price Quoted</div>
+                  <div class="node-desc">Quote ready</div>
+                </div>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="step-node <%= currentStep >= 4 ? 'completed' : '' %> <%= currentStep === 4 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepPurchased">Purchased</div>
+                  <div class="node-desc">Acquired abroad</div>
+                </div>
+              </div>
+
+              <!-- Step 5 -->
+              <div class="step-node <%= currentStep >= 5 ? 'completed' : '' %> <%= currentStep === 5 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepEnRoute">In Transit</div>
+                  <div class="node-desc">En route for delivery</div>
+                </div>
+              </div>
+
+              <!-- Step 6 -->
+              <div class="step-node <%= currentStep >= 6 ? 'completed' : '' %> <%= currentStep === 6 ? 'active' : '' %>">
+                <div class="node-circle">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="node-text">
+                  <div class="node-label" data-i18n="trackPage.stepDelivered">Delivered</div>
+                  <div class="node-desc">Delivered to you</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="cancelled-banner">
+            <i class="fas fa-times-circle"></i>
+            <div>
+              <strong>Request Cancelled</strong>
+              <p>This request was cancelled. If you have questions, please reach out via WhatsApp.</p>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Price Quote Feature Box (Displayed prominently when quoted) -->
+        <% if (request.quotedPrice) { %>
+          <div class="quote-display-banner">
+            <div class="quote-badge-header">
+              <i class="fas fa-calculator"></i>
+              <span data-i18n="trackPage.quotedPrice">Official Price Quote</span>
+            </div>
+            
+            <div class="quote-price-row">
+              <div class="quote-price-block">
+                <span class="price-val"><%= request.quotedPrice.toLocaleString() %> <small>EGP</small></span>
+                <span class="price-all-inclusive">All-Inclusive (German Retail + Flight Freight + Egypt Clearance)</span>
+              </div>
+              <div class="quote-actions">
+                <a href="<%= waConfirmLink %>" target="_blank" class="btn-confirm-quote">
+                  <i class="fab fa-whatsapp"></i> <span data-i18n="trackPage.confirmQuoteWa">Confirm & Proceed on WhatsApp</span>
+                </a>
+              </div>
+            </div>
+
+            <% if (request.adminNotes) { %>
+              <div class="quote-admin-notes">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                  <strong>Note from Our Germany Team:</strong>
+                  <p><%= request.adminNotes %></p>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="quote-pending-banner">
+            <div class="pending-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div>
+              <h4>Price Quote Under Calculation</h4>
+              <p>Our team in Germany is checking store stock, receipts, and flight schedules. You will receive an email and WhatsApp message as soon as the quote is ready!</p>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Specifications & Sourcing Details Grid -->
+        <div class="request-details-grid">
+          <div class="detail-card">
+            <h3><i class="fas fa-list-ul"></i> <span data-i18n="trackPage.specifications">Product Specifications</span></h3>
+            <p class="specs-text"><%= request.specifications %></p>
+            
+            <% if (request.referenceUrl) { %>
+              <div class="ref-link-row">
+                <i class="fas fa-external-link-alt"></i>
+                <a href="<%= request.referenceUrl %>" target="_blank" rel="noopener noreferrer">
+                  Open Provided Product Webpage
+                </a>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="detail-card">
+            <h3><i class="fas fa-user-check"></i> <span data-i18n="trackPage.customerDetails">Customer Contact</span></h3>
+            <div class="contact-rows">
+              <div class="c-row">
+                <span>Name:</span>
+                <strong><%= request.customerName %></strong>
+              </div>
+              <div class="c-row">
+                <span>Phone / WhatsApp:</span>
+                <strong><%= request.customerPhone %></strong>
+              </div>
+              <div class="c-row">
+                <span>Email:</span>
+                <strong><%= request.customerEmail %></strong>
+              </div>
+              <% if (request.targetBudget) { %>
+                <div class="c-row">
+                  <span data-i18n="trackPage.targetBudget">Target Budget:</span>
+                  <strong><%= request.targetBudget.toLocaleString() %> EGP</strong>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help / Quick Action Footer -->
+        <div class="dashboard-footer-actions">
+          <span>Need to modify details or speak with us?</span>
+          <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello! I have a question regarding request #${request.requestCode}`) %>" target="_blank" class="btn-secondary-wa">
+            <i class="fab fa-whatsapp"></i> Contact Support on WhatsApp
+          </a>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- User's Other Requests (If logged in) -->
+    <% if (userRequests && userRequests.length > 0) { %>
+      <div class="user-requests-history">
+        <h3><i class="fas fa-history"></i> Your Germany Sourcing Requests</h3>
+        <div class="history-grid">
+          <% userRequests.forEach(item => { %>
+            <a href="/track-request/<%= item.requestCode %>" class="history-card <%= (request && request.requestCode === item.requestCode) ? 'active' : '' %>">
+              <div class="h-top">
+                <span class="h-code">#<%= item.requestCode %></span>
+                <span class="h-status status-<%= item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') %>"><%= item.status %></span>
+              </div>
+              <h4 class="h-name"><%= item.productName %></h4>
+              <div class="h-bottom">
+                <span class="h-date"><%= new Date(item.createdAt).toLocaleDateString() %></span>
+                <% if (item.quotedPrice) { %>
+                  <span class="h-price"><%= item.quotedPrice.toLocaleString() %> EGP</span>
+                <% } else { %>
+                  <span class="h-pending">Reviewing</span>
+                <% } %>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+
+<style>
+/* ======================================================== */
+/* TRACK SOURCING REQUEST PAGE STYLES - LIGHT THEME         */
+/* ======================================================== */
+.track-page-wrapper {
+  position: relative;
+  min-height: 85vh;
+  padding: 3rem 1.25rem 5rem;
+  background: #FBF9F5;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.track-bg-glow {
+  display: none;
+}
+
+.track-container {
+  max-width: 980px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.track-hero-header {
+  text-align: center;
+  margin-bottom: 2.8rem;
+}
+
+.route-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1.5px solid #fed7aa;
+  color: #1e293b;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(255, 87, 34, 0.1);
+  margin-bottom: 1.25rem;
+}
+
+.route-pill i {
+  color: #ff5722;
+  font-size: 0.8rem;
+}
+
+.track-hero-header h1 {
+  font-size: clamp(2rem, 4.5vw, 2.8rem);
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.025em;
+}
+
+.track-hero-subtitle {
+  color: #64748b;
+  font-size: 1.05rem;
+  max-width: 620px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+/* Search Box Form */
+.track-search-form {
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.search-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 6px 8px 6px 20px;
+  box-shadow: 0 15px 35px -10px rgba(15, 23, 42, 0.08);
+  transition: all 0.25s ease;
+}
+
+.search-input-group:focus-within {
+  border-color: #ff5722;
+  box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.15), 0 20px 40px -10px rgba(255, 87, 34, 0.12);
+}
+
+.search-icon {
+  color: #94a3b8;
+  font-size: 1.15rem;
+  margin-right: 12px;
+}
+
+.search-input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1.02rem;
+  font-family: inherit;
+  color: #0f172a;
+  background: transparent;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #ff5722 0%, #ea580c 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.95rem 1.8rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 18px rgba(255, 87, 34, 0.35);
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 87, 34, 0.5);
+}
+
+/* Alert Box */
+.track-alert {
+  display: flex;
+  gap: 1.25rem;
+  background: #fff;
+  border: 1.5px solid #fecaca;
+  border-radius: 20px;
+  padding: 1.5rem 1.8rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.08);
+}
+
+.not-found-alert .alert-icon {
+  font-size: 1.8rem;
+  color: #ef4444;
+}
+
+.alert-content h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  color: #991b1b;
+}
+
+.alert-content p {
+  margin: 0 0 0.75rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.alert-action-link {
+  color: #ff5722;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Dashboard Card */
+.request-dashboard-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.08);
+  margin-bottom: 3rem;
+}
+
+.dashboard-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1.5px solid #f1f5f9;
+}
+
+.code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 4px 14px;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.code-badge span {
+  font-size: 0.78rem;
+  color: #ea580c;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.code-badge strong {
+  font-size: 1.1rem;
+  color: #ff5722;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+}
+
+.code-and-title h2 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.meta-row {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  color: #64748b;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item i {
+  color: #94a3b8;
+}
+
+.current-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Status colors */
+.status-pending { background: #fef3c7; color: #b45309; }
+.status-pending .pulse-dot { background: #b45309; }
+
+.status-in-review { background: #e0f2fe; color: #0369a1; }
+.status-in-review .pulse-dot { background: #0369a1; }
+
+.status-quoted { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.status-quoted .pulse-dot { background: #ea580c; }
+
+.status-sourced-in-germany { background: #f3e8ff; color: #7e22ce; }
+.status-sourced-in-germany .pulse-dot { background: #7e22ce; }
+
+.status-shipped-to-egypt { background: #e0e7ff; color: #4338ca; }
+.status-shipped-to-egypt .pulse-dot { background: #4338ca; }
+
+.status-delivered { background: #dcfce7; color: #15803d; }
+.status-delivered .pulse-dot { background: #15803d; }
+
+.status-cancelled { background: #fee2e2; color: #b91c1c; }
+.status-cancelled .pulse-dot { background: #b91c1c; }
+
+/* Timeline */
+.timeline-container {
+  padding: 3rem 1rem 2.5rem;
+  position: relative;
+}
+
+.timeline-track {
+  position: absolute;
+  top: calc(3rem + 24px);
+  left: 8%;
+  right: 8%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  z-index: 1;
+}
+
+.timeline-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff5722 0%, #10b981 100%);
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timeline-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.step-node {
+  text-align: center;
+  width: 110px;
+}
+
+.node-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #cbd5e1;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+.step-node.completed .node-circle {
+  background: #10b981;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.step-node.active .node-circle {
+  background: #ff5722;
+  border-color: #ea580c;
+  color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 8px 22px rgba(255, 87, 34, 0.4);
+}
+
+.node-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.step-node.completed .node-label,
+.step-node.active .node-label {
+  color: #0f172a;
+}
+
+.node-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.25;
+}
+
+/* Quote Display Banner */
+.quote-display-banner {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 2px solid #fed7aa;
+  border-radius: 22px;
+  padding: 1.8rem 2rem;
+  margin: 1.5rem 0 2rem;
+  box-shadow: 0 10px 25px rgba(255, 87, 34, 0.08);
+}
+
+.quote-badge-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ea580c;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.quote-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.price-val {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #ff5722;
+  display: block;
+}
+
+.price-val small {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.price-all-inclusive {
+  font-size: 0.86rem;
+  color: #64748b;
+  display: block;
+  margin-top: 3px;
+}
+
+.btn-confirm-quote {
+  background: #25D366;
+  color: #ffffff;
+  padding: 1rem 1.8rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-confirm-quote:hover {
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.45);
+}
+
+.quote-admin-notes {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #fed7aa;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: #7c2d12;
+  font-size: 0.92rem;
+}
+
+.quote-admin-notes i {
+  color: #ea580c;
+  font-size: 1.1rem;
+  margin-top: 3px;
+}
+
+.quote-admin-notes p {
+  margin: 3px 0 0;
+  color: #431407;
+}
+
+/* Quote Pending Banner */
+.quote-pending-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.5rem 1.8rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.pending-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.quote-pending-banner h4 {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.quote-pending-banner p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Details Grid */
+.request-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detail-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.5rem 1.8rem;
+}
+
+.detail-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-card h3 i {
+  color: #ff5722;
+}
+
+.specs-text {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  margin: 0 0 1rem;
+}
+
+.ref-link-row a {
+  color: #ff5722;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: underline;
+}
+
+.contact-rows .c-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+
+.contact-rows .c-row:last-child {
+  border-bottom: none;
+}
+
+.contact-rows .c-row span {
+  color: #64748b;
+}
+
+.contact-rows .c-row strong {
+  color: #0f172a;
+}
+
+/* Footer Actions */
+.dashboard-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1.5px solid #f1f5f9;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.btn-secondary-wa {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #1e293b;
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-wa i {
+  color: #25D366;
+}
+
+.btn-secondary-wa:hover {
+  border-color: #25D366;
+  color: #16a34a;
+}
+
+/* User Requests History Cards */
+.user-requests-history {
+  margin-top: 3.5rem;
+}
+
+.user-requests-history h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-requests-history h3 i {
+  color: #ff5722;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.history-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.25rem 1.4rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.history-card:hover,
+.history-card.active {
+  border-color: #ff5722;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 87, 34, 0.12);
+}
+
+.h-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.h-code {
+  font-family: monospace;
+  font-weight: 700;
+  color: #ff5722;
+  font-size: 0.95rem;
+}
+
+.h-status {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+.h-name {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.h-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.h-price {
+  font-weight: 700;
+  color: #ff5722;
+}
+
+.h-pending {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .timeline-container {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .timeline-track {
+    display: none;
+  }
+
+  .timeline-steps {
+    flex-direction: column;
+    gap: 1.15rem;
+    align-items: flex-start;
+  }
+
+  .step-node {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .node-circle {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .node-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  .track-page-wrapper {
+    padding: 2rem 1rem 4rem;
+  }
+
+  .request-dashboard-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 20px;
+  }
+
+  .dashboard-header-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .code-and-title h2 {
+    font-size: 1.35rem;
+  }
+
+  .request-details-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .detail-card {
+    padding: 1.25rem;
+  }
+
+  .quote-display-banner {
+    padding: 1.35rem 1.25rem;
+  }
+
+  .price-val {
+    font-size: 1.9rem;
+  }
+
+  .quote-price-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quote-actions {
+    width: 100%;
+  }
+
+  .btn-confirm-quote {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .quote-pending-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+  }
+
+  .track-alert {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .search-input-group {
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .search-icon {
+    display: none;
+  }
+
+  .search-input-group input {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .search-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.9rem 1.25rem;
+  }
+
+  .dashboard-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .btn-secondary-wa {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<%- include('../components/footer') %>

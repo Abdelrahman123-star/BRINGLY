@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const adminCategoryController = require('../controllers/AdminCategoryController');
-const upload = require('../middleware/upload');
+const upload = require('../Middleware/upload');
 const multer = require('multer');
 const discountController = require('../controllers/discountController');
 const settingController = require('../controllers/settingController');
@@ -12,7 +12,7 @@ const cartRoutes = require('./admin/cartRoutes');
 const orderRoutes = require('./admin/orderRoutes');
 const adminRequestController = require('../controllers/adminRequestController');
 
-const { ensureAdmin } = require('../middleware/auth');
+const { ensureAdmin } = require('../Middleware/auth');
 
 router.get('/', ensureAdmin, (req, res) => {
   res.redirect('/admin/dashboard');

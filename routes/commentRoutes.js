@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const commentController = require('../controllers/commentController');
-const { ensureAdmin } = require('../middleware/auth');
+const { ensureAdmin } = require('../Middleware/auth');
 
 // Admin routes
 router.get('/admin/comments', ensureAdmin, commentController.getAllComments);

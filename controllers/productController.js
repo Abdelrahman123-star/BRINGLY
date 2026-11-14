@@ -1,7 +1,7 @@
 const { Product } = require('../dataBase');
-const upload = require('../middleware/upload');
+const upload = require('../Middleware/upload');
 const Discount = require('../models/discount');
-const Comment = require('../models/comment');
+const Comment = require('../models/Comment');
 
 // Get all products
 exports.getAllProducts = async (req, res) => {

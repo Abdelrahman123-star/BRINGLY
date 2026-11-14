@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const AdminCategoryController = require('../controllers/AdminCategoryController');
-const upload = require('../middleware/upload');
-const { ensureAdmin } = require('../middleware/auth');
+const upload = require('../Middleware/upload');
+const { ensureAdmin } = require('../Middleware/auth');
 
 // Category management routes
 router.get('/', ensureAdmin, AdminCategoryController.listCategories);

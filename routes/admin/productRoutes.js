@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../../models/Product');
-const { ensureAuthenticated, ensureAdmin } = require('../../middleware/auth');
-const upload = require('../../middleware/upload');
+const { ensureAuthenticated, ensureAdmin } = require('../../Middleware/auth');
+const upload = require('../../Middleware/upload');
 
 // Apply authentication and admin middleware to all routes
 router.use(ensureAuthenticated, ensureAdmin);

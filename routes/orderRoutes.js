@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
-const { ensureAuthenticated } = require('../middleware/auth');
+const { ensureAuthenticated } = require('../Middleware/auth');
 const orderController = require('../controllers/orderController');
 
 // Order confirmation page

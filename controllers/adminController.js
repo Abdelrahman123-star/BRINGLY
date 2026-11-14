@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const collection = require('../database');
+const collection = require('../dataBase');
 const UserModel = require('../models/User');
 const Category = require('../models/category');
 const Order = require('../models/Order');

@@ -1,13 +1,23 @@
+require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const http = require('http');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const sslConfig = require('./config/sslConfig');
-require('dotenv').config();
 const flash = require('connect-flash');
-require('./dataBase'); // Import database connection
+const mongoose = require('mongoose');
+const { connectDB } = require('./dataBase');
+
+// Safely load local SSL configuration (skipped on Vercel)
+let sslConfig = null;
+if (!process.env.VERCEL) {
+    try {
+        sslConfig = require('./config/sslConfig');
+    } catch (e) {
+        // SSL certs may not be present in all environments
+    }
+}
 
 const authRoutes = require('./routes/authRoutes');
 const pageRoutes = require('./routes/pageRoutes');
@@ -24,22 +34,44 @@ const requestRoutes = require('./routes/requestRoutes');
 
 const app = express();
 
+// Trust reverse proxy (essential for Vercel, Heroku, and HTTPS cookies)
+app.set('trust proxy', 1);
+
+// Ensure MongoDB is connected in serverless environments
+app.use(async (req, res, next) => {
+    if (mongoose.connection.readyState === 0 && process.env.MONGODB_URI) {
+        try {
+            await connectDB();
+        } catch (err) {
+            console.error('Serverless DB connect error:', err);
+        }
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(session({
-    secret: 'WebProject_secret_123',
+
+// Session configuration
+const sessionOptions = {
+    secret: process.env.SESSION_SECRET || 'WebProject_secret_123',
     resave: false,
-    saveUninitialized: true,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI,
-        ttl: 24 * 60 * 60 // 1 day
-    }),
+    saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
-}));
+};
+
+if (process.env.MONGODB_URI) {
+    sessionOptions.store = MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 24 * 60 * 60 // 1 day
+    });
+}
+
+app.use(session(sessionOptions));
 
 // Flash middleware
 app.use(flash());
@@ -92,7 +124,7 @@ app.use((req, res, next) => {
             status: 404,
             stack: 'The page you are looking for does not exist.'
         },
-        user: req.session.user || null
+        user: req.session ? req.session.user : null
     });
 });
 
@@ -102,40 +134,44 @@ app.use((err, req, res, next) => {
     res.status(500).render('error', {
         message: 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err : {},
-        user: req.session.user || null
+        user: req.session ? req.session.user : null
     });
 });
 
-// Create HTTP server for redirection
-const httpApp = express();
-httpApp.use((req, res) => {
-    res.redirect(`https://${req.headers.host}${req.url}`);
-});
+// Start local server (only when run directly, e.g. `node app.js` locally)
+if (require.main === module && !process.env.VERCEL) {
+    const HTTP_PORT = process.env.PORT || 3000;
+    const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
-// Create HTTPS server
-const httpsServer = https.createServer(sslConfig, app);
+    if (sslConfig && sslConfig.key && sslConfig.cert) {
+        // Create HTTP server for redirection
+        const httpApp = express();
+        httpApp.use((req, res) => {
+            res.redirect(`https://${req.headers.host}${req.url}`);
+        });
 
-// Start both servers
-const HTTP_PORT = 3000;  // Hardcoded for development
-const HTTPS_PORT = 3443; // Hardcoded for development
+        const httpServer = http.createServer(httpApp);
+        httpServer.listen(HTTP_PORT, '127.0.0.1', (err) => {
+            if (err) {
+                console.error('Error starting HTTP server:', err);
+                return;
+            }
+            console.log(`HTTP redirect server running on http://127.0.0.1:${HTTP_PORT}`);
+        });
 
-console.log('Starting servers with ports:', { HTTP_PORT, HTTPS_PORT });
-
-// Create and start HTTP server
-const httpServer = http.createServer(httpApp);
-httpServer.listen(HTTP_PORT, '127.0.0.1', (err) => {
-    if (err) {
-        console.error('Error starting HTTP server:', err);
-        return;
+        const httpsServer = https.createServer(sslConfig, app);
+        httpsServer.listen(HTTPS_PORT, '127.0.0.1', (err) => {
+            if (err) {
+                console.error('Error starting HTTPS server:', err);
+                return;
+            }
+            console.log(`HTTPS server running on https://127.0.0.1:${HTTPS_PORT}`);
+        });
+    } else {
+        app.listen(HTTP_PORT, () => {
+            console.log(`Server running on http://localhost:${HTTP_PORT}`);
+        });
     }
-    console.log(`HTTP Server running on http://127.0.0.1:${HTTP_PORT}`);
-});
+}
 
-// Start HTTPS server
-httpsServer.listen(HTTPS_PORT, '127.0.0.1', (err) => {
-    if (err) {
-        console.error('Error starting HTTPS server:', err);
-        return;
-    }
-    console.log(`HTTPS Server running on https://127.0.0.1:${HTTPS_PORT}`);
-});
+module.exports = app;

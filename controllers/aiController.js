@@ -2,13 +2,30 @@ const { OpenAI } = require('openai');
 
 class AIController {
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    this.openai = null;
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        this.openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY
+        });
+      } catch (err) {
+        console.warn("Failed to initialize OpenAI client:", err.message);
+      }
+    }
   }
 
   async handleChat(req, res) {
     try {
+      if (!this.openai && process.env.OPENAI_API_KEY) {
+        this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      }
+
+      if (!this.openai) {
+        return res.json({
+          reply: "The AI assistant is currently offline. Please configure OPENAI_API_KEY in your deployment environment."
+        });
+      }
+
       if (!req.body?.message) {
         return this.sendError(res, 400, "Invalid request format", "Please provide a message in your request");
       }

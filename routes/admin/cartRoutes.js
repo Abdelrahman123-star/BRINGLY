@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Cart = require('../../models/Cart');
-const { ensureAuthenticated, ensureAdmin } = require('../../middleware/auth');
+const { ensureAuthenticated, ensureAdmin } = require('../../Middleware/auth');
 const cartController = require('../../controllers/admin/cartController');
 
 // Apply authentication and admin middleware to all routes

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../../models/category'); // Changed to lowercase 'c' for consistency
-const { ensureAuthenticated, ensureAdmin } = require('../../middleware/auth');
-const upload = require('../../middleware/upload'); // Assuming you use multer for image uploads
+const { ensureAuthenticated, ensureAdmin } = require('../../Middleware/auth');
+const upload = require('../../Middleware/upload'); // Assuming you use multer for image uploads
 
 // Apply authentication and admin middleware to all routes
 router.use(ensureAuthenticated, ensureAdmin);

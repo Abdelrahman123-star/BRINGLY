@@ -54,6 +54,8 @@ desktop.ini
 .gemini/
 .claude/
 .cursor/
+scratch/
+.vercel/
 
 # Runtime, Temp & Coverage
 pids/

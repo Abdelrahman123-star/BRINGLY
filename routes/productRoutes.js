@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
-const upload = require('../middleware/upload');
-const { ensureAdmin } = require('../middleware/auth');
+const upload = require('../Middleware/upload');
+const { ensureAdmin } = require('../Middleware/auth');
 const Product = require('../models/Product');
 const Category = require('../models/category');
 const Discount = require('../models/discount');

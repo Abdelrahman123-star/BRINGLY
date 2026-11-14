@@ -99,6 +99,12 @@ app.use((req, res, next) => {
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Case-sensitivity alias for static files
+app.get('/css/category.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/css/Category.css'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes

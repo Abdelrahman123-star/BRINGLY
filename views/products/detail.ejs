@@ -215,28 +215,47 @@
                         <!-- Left Column: Product Images -->
                         <div class="product-gallery">
                             <div class="main-image-container">
-                                <% if (product.imageUrl && product.imageUrl.trim() !=='' ) { %>
-                                    <a href="<%= product.imageUrl %>" data-lightbox="product-image"
+                                <% const mainDetailImg=product.thumbnail || product.imageUrl || product.imagePath ||
+                                    (product.images && product.images.length> 0 ? product.images[0] : '') ||
+                                    '/imgs/img-notfound.jpg';
+                                    %>
+                                    <a id="mainDetailLink" href="<%= mainDetailImg %>" data-lightbox="product-image"
                                         data-title="<%= product.name %>">
-                                        <img src="<%= product.imageUrl %>" alt="<%= product.name %>" class="main-image">
+                                        <img id="mainDetailImg" src="<%= mainDetailImg %>" alt="<%= product.name %>"
+                                            class="main-image">
                                     </a>
-                                    <% } else if (product.imagePath && product.imagePath.trim() !=='' ) { %>
-                                        <a href="<%= product.imagePath %>" data-lightbox="product-image"
-                                            data-title="<%= product.name %>">
-                                            <img src="<%= product.imagePath %>" alt="<%= product.name %>"
-                                                class="main-image">
-                                        </a>
-                                        <% } else { %>
-                                            <a href="/imgs/img-notfound.jpg" data-lightbox="product-image"
-                                                data-title="Image Not Found">
-                                                <img src="/imgs/img-notfound.jpg" alt="Image Not Found"
-                                                    class="main-image">
-                                            </a>
-                                            <% } %>
-                                                <div class="zoom-hint" data-i18n="productDetailPage.zoom.hint">
-                                                    <i class="fas fa-search-plus"></i> Click to zoom
-                                                </div>
+                                    <div class="zoom-hint" data-i18n="productDetailPage.zoom.hint">
+                                        <i class="fas fa-search-plus"></i> Click to zoom
+                                    </div>
                             </div>
+
+                            <% if (product.images && product.images.length> 1) { %>
+                                <div class="detail-gallery-strip"
+                                    style="display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px;">
+                                    <% product.images.forEach(function(imgUrl, idx) { %>
+                                        <div class="detail-thumb-card <%= (imgUrl === mainDetailImg) ? 'active' : '' %>"
+                                            style="width: 65px; height: 65px; border-radius: 8px; overflow: hidden; cursor: pointer; flex-shrink: 0; border: 2px solid <%= (imgUrl === mainDetailImg) ? '#ff5722' : '#e2e8f0' %>; transition: border-color 0.2s;"
+                                            onclick="switchDetailPhoto(this, '<%= imgUrl %>')">
+                                            <img src="<%= imgUrl %>" alt="<%= product.name %>"
+                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                        </div>
+                                        <% }); %>
+                                </div>
+                                <script>
+                                    function switchDetailPhoto(element, src) {
+                                        var mainImg = document.getElementById('mainDetailImg');
+                                        var mainLink = document.getElementById('mainDetailLink');
+                                        if (mainImg) mainImg.src = src;
+                                        if (mainLink) mainLink.href = src;
+                                        document.querySelectorAll('.detail-thumb-card').forEach(function (el) {
+                                            el.style.borderColor = '#e2e8f0';
+                                        });
+                                        if (element) {
+                                            element.style.borderColor = '#ff5722';
+                                        }
+                                    }
+                                </script>
+                                <% } %>
                         </div>
 
                         <!-- Right Column: Product Info -->
@@ -245,6 +264,7 @@
                                 <h1 class="product-title">
                                     <%= product.name %>
                                 </h1>
+                                <% if (false) { /* Reviews & rating hidden for now */ %>
                                 <div class="product-rating">
                                     <div class="stars">
                                         <% for(let i=1; i <=5; i++) { %>
@@ -255,7 +275,14 @@
                                     <span class="rating-count">(<%= product.numberOfReviews %> <span
                                                 data-i18n="productDetailPage.reviews.reviews">reviews</span>)</span>
                                 </div>
+                                <% } %>
                             </div>
+
+                            <% if (product.price && product.price > 0) { %>
+                                <div class="product-price-row" style="margin: 0.75rem 0 1rem; font-size: 1.6rem; font-weight: 700; color: #1A2238;">
+                                    ~ <%= Number(product.price).toLocaleString('en-US') %> <span style="font-size: 0.95rem; font-weight: 500; color: #64748b;">EGP</span>
+                                </div>
+                            <% } %>
 
                             <div class="product-description">
                                 <h3 data-i18n="productDetailPage.description">Craft & Details</h3>
@@ -269,7 +296,7 @@
                                     class="fas <%= product.stock > 10 ? 'fa-check-circle' : (product.stock > 0 ? 'fa-exclamation-circle' : 'fa-times-circle') %>"></i>
                                 <span
                                     data-i18n="productDetailPage.stock.<%= product.stock > 10 ? 'inStock' : (product.stock > 0 ? 'lowStock' : 'outOfStock') %>">
-                                    <%= product.stock > 10 ? 'Available in Showroom' : (product.stock > 0 ? 'Limited Atelier Quantity' : 'Made to Order') %>
+                                    <%= product.stock > 10 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock') %>
                                 </span>
                                 <% if (product.stock> 0) { %>
                                     <span class="stock-count">(<%= product.stock %> <span
@@ -277,37 +304,28 @@
                                     <% } %>
                             </div>
 
-                            <!-- Private Atelier Concierge & WhatsApp Ordering -->
-                            <div class="atelier-inquire-box">
-                                <div class="atelier-inquire-badge">
-                                    <i class="fas fa-gem"></i>
-                                    <span data-i18n="productDetailPage.showroomBadge">Private Showroom Collection</span>
-                                </div>
-                                <p class="atelier-inquire-text" data-i18n="productDetailPage.showroomText">
-                                    Every piece is curated with premium craftsmanship. Contact our styling concierge
-                                    directly on WhatsApp to check available sizes, request custom measurements, or place
-                                    your order.
-                                </p>
-                                <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in ordering '${product.name}' (Product ID: ${product._id}). Could you please assist me with availability, details, and placing an order?`) %>"
-                                    target="_blank" class="btn-detail-wa" title="Order & Inquire on WhatsApp">
+                            <!-- WhatsApp Inquiry & Ordering -->
+                            <div class="product-actions-box" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                                <% if (product.productLink && product.productLink.trim() !== '') { %>
+                                    <% 
+                                      let pLink = product.productLink.trim();
+                                      if (!/^https?:\/\//i.test(pLink)) pLink = 'https://' + pLink;
+                                    %>
+                                    <a href="<%= pLink %>" target="_blank" rel="noopener noreferrer" class="btn-detail-wa" style="background: #1A2238;">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        <span>Visit Original Store</span>
+                                    </a>
+                                <% } %>
+                                <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in '${product.name}'${product.price ? ` (~${product.price} EGP)` : ''}. Could you please share more details?`) %>"
+                                    target="_blank" class="btn-detail-wa" title="Inquire on WhatsApp">
                                     <i class="fab fa-whatsapp"></i>
-                                    <span data-i18n="productDetailPage.inquireWa">Inquire & Order via WhatsApp</span>
+                                    <span>Inquire & Order on WhatsApp</span>
                                 </a>
-
-                                <div class="atelier-perks-list">
-                                    <div class="atelier-perk">
-                                        <i class="fas fa-ruler-combined"></i>
-                                        <span>Bespoke sizing & styling advice</span>
-                                    </div>
-                                    <div class="atelier-perk">
-                                        <i class="fas fa-truck"></i>
-                                        <span>Fast nationwide courier delivery</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
 
+                    <% if (false) { /* Comments and reviews section commented out for now */ %>
                     <section class="comments-section">
                         <h3 data-i18n="productDetailPage.reviews.title">Customer Reviews</h3>
 
@@ -335,8 +353,9 @@
                                             <%= i %> <span data-i18n="productDetailPage.reviews.stars">stars</span>
                                         </span>
                                         <div class="progress-bar">
-                                            <% const width = ((comments.filter(c => c.rating === i).length / (product.numberOfReviews || 1)) * 100).toFixed(0); %>
-                                            <div class="progress" style="width: <%= width %>%;"></div>
+                                            <% const width=((comments.filter(c=> c.rating === i).length /
+                                                (product.numberOfReviews || 1)) * 100).toFixed(0); %>
+                                                <div class="progress" style="width: <%= width %>%;"></div>
                                         </div>
                                         <span class="rating-count">
                                             <%= comments.filter(c=> c.rating === i).length %>
@@ -349,14 +368,17 @@
                         <!-- Comment Form (Open to all visitors without login) -->
                         <div class="comment-form-container">
                             <h4 class="comment-form-title">
-                                <i class="fas fa-feather-alt"></i> <span data-i18n="productDetailPage.leaveReview">Leave a Review & Rating</span>
+                                <i class="fas fa-feather-alt"></i> <span data-i18n="productDetailPage.leaveReview">Leave
+                                    a Review & Rating</span>
                             </h4>
-                            <p class="comment-form-subtitle" data-i18n="productDetailPage.leaveReviewSub">Share your experience with this piece. No account
+                            <p class="comment-form-subtitle" data-i18n="productDetailPage.leaveReviewSub">Share your
+                                experience with this piece. No account
                                 needed—just enter your name, star rating, and review.</p>
 
                             <form id="commentForm" class="comment-form">
                                 <div class="form-group">
-                                    <label for="authorName"><span data-i18n="productDetailPage.yourName">Your Name</span> <span class="required-star">*</span></label>
+                                    <label for="authorName"><span data-i18n="productDetailPage.yourName">Your
+                                            Name</span> <span class="required-star">*</span></label>
                                     <input type="text" id="authorName" name="authorName" required
                                         data-i18n-placeholder="productDetailPage.yourNamePlaceholder"
                                         placeholder="Enter your name (e.g. Omar, Sarah M.)"
@@ -428,6 +450,7 @@
                                             <% } %>
                         </div>
                     </section>
+                    <% } /* End commented out comments section */ %>
 
                     <section class="related-products-section">
                         <h3 data-i18n="productDetailPage.relatedProducts.title">More Products You Might Like</h3>

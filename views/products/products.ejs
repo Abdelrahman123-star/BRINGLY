@@ -112,13 +112,10 @@
         <% products.forEach(product => { %>
           <article class="product-card" onclick="window.location.href='/products/detail/<%= product._id %>'">
             <div class="product-image">
-              <% if (product.imageUrl && product.imageUrl.trim() !== '') { %>
-                <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
-              <% } else if (product.imagePath && product.imagePath.trim() !== '') { %>
-                <img src="<%= product.imagePath %>" alt="<%= product.name %>" loading="lazy">
-              <% } else { %>
-                <img src="/imgs/img-notfound.jpg" alt="Image Not Found" loading="lazy">
-              <% } %>
+              <% 
+                const catThumb = product.thumbnail || product.imageUrl || product.imagePath || (product.images && product.images.length > 0 ? product.images[0] : '') || '/imgs/img-notfound.jpg';
+              %>
+              <img src="<%= catThumb %>" alt="<%= product.name %>" loading="lazy">
 
               <div class="product-actions">
                 <button class="action-button" title="View Details" aria-label="View Details">

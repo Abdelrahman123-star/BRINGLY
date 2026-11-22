@@ -15,12 +15,12 @@ router.get('/admin', ensureAdmin, productController.getAllProducts);
 router.get('/:id', ensureAdmin, productController.getProductById);
 router.post('/create', 
   ensureAdmin,
-  upload.single('productImage'),
+  upload.any(),
   productController.createProduct
 );
 router.post('/:id', 
   ensureAdmin,
-  upload.single('productImage'),
+  upload.any(),
   productController.updateProduct
 );
 router.delete('/:id', ensureAdmin, productController.deleteProduct);

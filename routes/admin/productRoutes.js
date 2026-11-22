@@ -37,10 +37,65 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create product
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', upload.any(), async (req, res) => {
     try {
-        const { name, description, price, stock, category, discount } = req.body;
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+        const { name, description, price, stock, category, discount, productLink, selectedThumbnail, existingImagesJson, imageUrl } = req.body;
+        
+        let uploadedImages = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            uploadedImages = req.files.map(f => `/uploads/${f.filename}`);
+        } else if (req.file) {
+            uploadedImages = [`/uploads/${req.file.filename}`];
+        }
+
+        let urlImages = [];
+        if (imageUrl && imageUrl.trim()) {
+            urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0);
+        }
+
+        let existingImages = [];
+        if (existingImagesJson) {
+            try {
+                const parsed = JSON.parse(existingImagesJson);
+                if (Array.isArray(parsed)) existingImages = parsed.filter(Boolean);
+            } catch (e) {}
+        }
+
+        const allImages = [...existingImages, ...uploadedImages, ...urlImages];
+
+        let chosenThumbnail = '';
+        if (selectedThumbnail) {
+            if (selectedThumbnail.startsWith('upload:') || selectedThumbnail.startsWith('new:')) {
+                const idx = parseInt(selectedThumbnail.split(':')[1], 10);
+                if (!isNaN(idx) && uploadedImages[idx]) {
+                    chosenThumbnail = uploadedImages[idx];
+                }
+            } else if (allImages.includes(selectedThumbnail)) {
+                chosenThumbnail = selectedThumbnail;
+            } else {
+                const idx = parseInt(selectedThumbnail, 10);
+                if (!isNaN(idx) && allImages[idx]) {
+                    chosenThumbnail = allImages[idx];
+                }
+            }
+        }
+
+        if (!chosenThumbnail && allImages.length > 0) {
+            chosenThumbnail = allImages[0];
+        }
+
+        let formattedLink = productLink ? productLink.trim() : '';
+        if (formattedLink && !/^https?:\/\//i.test(formattedLink)) {
+            formattedLink = 'https://' + formattedLink;
+        }
+
+        let imagePath = '';
+        let mainImageUrl = '';
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+            mainImageUrl = chosenThumbnail;
+        } else if (chosenThumbnail) {
+            imagePath = chosenThumbnail;
+        }
 
         const product = new Product({
             name,
@@ -49,7 +104,11 @@ router.post('/', upload.single('image'), async (req, res) => {
             stock,
             category,
             discount: discount || 0,
-            imagePath
+            imagePath,
+            imageUrl: mainImageUrl,
+            thumbnail: chosenThumbnail,
+            images: allImages,
+            productLink: formattedLink
         });
 
         await product.save();
@@ -63,21 +122,91 @@ router.post('/', upload.single('image'), async (req, res) => {
 });
 
 // Update product
-router.put('/:id', upload.single('image'), async (req, res) => {
+router.put('/:id', upload.any(), async (req, res) => {
     try {
-        const { name, description, price, stock, category, discount } = req.body;
+        const { name, description, price, stock, category, discount, productLink, selectedThumbnail, existingImagesJson, imageUrl } = req.body;
+        let formattedLink = typeof productLink !== 'undefined' ? productLink.trim() : '';
+        if (formattedLink && !/^https?:\/\//i.test(formattedLink)) {
+            formattedLink = 'https://' + formattedLink;
+        }
+
+        const currentProduct = await Product.findById(req.params.id);
+        if (!currentProduct) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        let existingImages = [];
+        if (typeof existingImagesJson !== 'undefined') {
+            try {
+                const parsed = JSON.parse(existingImagesJson);
+                if (Array.isArray(parsed)) existingImages = parsed.filter(Boolean);
+            } catch (e) {}
+        } else if (currentProduct.images && currentProduct.images.length > 0) {
+            existingImages = [...currentProduct.images];
+        } else if (currentProduct.imagePath || currentProduct.imageUrl) {
+            existingImages = [currentProduct.imagePath || currentProduct.imageUrl].filter(Boolean);
+        }
+
+        let uploadedImages = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            uploadedImages = req.files.map(f => `/uploads/${f.filename}`);
+        } else if (req.file) {
+            uploadedImages = [`/uploads/${req.file.filename}`];
+        }
+
+        let urlImages = [];
+        if (imageUrl && imageUrl.trim()) {
+            urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0 && !existingImages.includes(u));
+        }
+
+        const allImages = [...existingImages, ...uploadedImages, ...urlImages];
+
+        let chosenThumbnail = '';
+        if (selectedThumbnail) {
+            if (selectedThumbnail.startsWith('upload:') || selectedThumbnail.startsWith('new:')) {
+                const idx = parseInt(selectedThumbnail.split(':')[1], 10);
+                if (!isNaN(idx) && uploadedImages[idx]) {
+                    chosenThumbnail = uploadedImages[idx];
+                }
+            } else if (allImages.includes(selectedThumbnail)) {
+                chosenThumbnail = selectedThumbnail;
+            } else {
+                const idx = parseInt(selectedThumbnail, 10);
+                if (!isNaN(idx) && allImages[idx]) {
+                    chosenThumbnail = allImages[idx];
+                }
+            }
+        }
+
+        if (!chosenThumbnail) {
+            if (currentProduct.thumbnail && allImages.includes(currentProduct.thumbnail)) {
+                chosenThumbnail = currentProduct.thumbnail;
+            } else if (allImages.length > 0) {
+                chosenThumbnail = allImages[0];
+            }
+        }
+
+        let imagePath = '';
+        let mainImageUrl = '';
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+            mainImageUrl = chosenThumbnail;
+        } else if (chosenThumbnail) {
+            imagePath = chosenThumbnail;
+        }
+
         const updateData = {
             name,
             description,
             price,
             stock,
             category,
-            discount: discount || 0
+            discount: discount || 0,
+            productLink: formattedLink,
+            images: allImages,
+            thumbnail: chosenThumbnail,
+            imagePath,
+            imageUrl: mainImageUrl
         };
-
-        if (req.file) {
-            updateData.imagePath = `/uploads/${req.file.filename}`;
-        }
 
         const product = await Product.findByIdAndUpdate(
             req.params.id,
@@ -85,11 +214,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
             { new: true }
         );
 
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        res.json({ success: true, message: 'Product updated successfully' });
+        res.json({ success: true, message: 'Product updated successfully', product });
     } catch (error) {
         console.error('Error updating product:', error);
         res.status(500).json({ error: 'Failed to update product' });

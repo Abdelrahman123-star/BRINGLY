@@ -27,14 +27,14 @@
   <div class="carousel-container">
     <div class="carousel-inner">
       
-      <!-- Slide 1: Tennis & Court Collection -->
+      <!-- Slide 1: Tennis & Wilson Racquets Collection -->
       <div class="carousel-slide active">
-        <img src="/imgs/atelier-tennis-banner.jpg" alt="Tennis & Court Collection">
+        <img src="/imgs/atelier-tennis-banner.jpg" alt="Wilson & Tennis Racquets">
         <div class="carousel-caption">
-          <h1 data-i18n="homePage.carousel.tennis.title">The Grand Slam Club Collection</h1>
-          <p data-i18n="homePage.carousel.tennis.description">Precision tennis racquets, premium court apparel, and bespoke sports gear. Inquire directly on WhatsApp for sourcing and private sets.</p>
+          <h1 data-i18n="homePage.carousel.tennis.title">Wilson & Pro Tennis Racquets</h1>
+          <p data-i18n="homePage.carousel.tennis.description">Original Wilson, Head, and tournament-grade tennis racquets, strings, and gear sourced directly from Europe. Message us on WhatsApp for availability and custom grip sizing.</p>
           <div class="carousel-cta-row">
-            <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I'm%20browsing%20your%20Tennis%20racquets%20and%20sports%20gear%20from%20Germany." 
+            <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I'm interested in your Wilson and tennis racquets selection.`) %>" 
                target="_blank" 
                class="carousel-wa-btn">
               <i class="fab fa-whatsapp"></i>
@@ -44,7 +44,8 @@
         </div>
       </div>
 
-      <!-- Slide 2: Luxury Makeup & Beauty Essentials -->
+      <!-- Slide 2: Luxury Makeup & Beauty Essentials (Commented out per request) -->
+      <!--
       <div class="carousel-slide">
         <img src="/imgs/atelier-makeup-banner.jpg" alt="Prestige Beauty & Essential Cosmetics">
         <div class="carousel-caption">
@@ -60,8 +61,10 @@
           </div>
         </div>
       </div>
+      -->
 
-      <!-- Slide 3: Heritage Apparel (Preserved) -->
+      <!-- Slide 3: Heritage Apparel (Commented out per request) -->
+      <!--
       <div class="carousel-slide">
         <img src="/imgs/atelier-banner-1.jpg" alt="Atelier Collection">
         <div class="carousel-caption">
@@ -77,6 +80,7 @@
           </div>
         </div>
       </div>
+      -->
 
       <!-- Commented Out Old Banner: The Summer Capsule '26 (Preserved per request) -->
       <!--
@@ -98,36 +102,50 @@
       -->
 
     </div>
-    <button class="carousel-nav prev" onclick="prevSlide()" aria-label="Previous Slide">&#10094;</button>
-    <button class="carousel-nav next" onclick="nextSlide()" aria-label="Next Slide">&#10095;</button>
+    <button class="carousel-nav prev" onclick="prevSlide()" aria-label="Previous Slide" style="display: none;">&#10094;</button>
+    <button class="carousel-nav next" onclick="nextSlide()" aria-label="Next Slide" style="display: none;">&#10095;</button>
   </div>
-  <div class="carousel-indicators">
+  <div class="carousel-indicators" style="display: none;">
     <span class="indicator active" onclick="goToSlide(0)"></span>
-    <span class="indicator" onclick="goToSlide(1)"></span>
-    <span class="indicator" onclick="goToSlide(2)"></span>
   </div>
 </section>
 
 <section class="featured-products-modern">
   <div class="fp-header">
-    <h2 data-i18n="homePage.featuredProducts.title">Curated Essentials</h2>
+    <h2 data-i18n="homePage.featuredProducts.title">Featured Products</h2>
   </div>
 
   <div class="fp-carousel">
     <% if (featuredProducts && featuredProducts.length > 0) { %>
       <% featuredProducts.forEach(function(product) { %>
-        <article class="fp-product" onclick="window.location.href='/products/detail/<%= product._id %>'">
+        <% 
+          const displayPrice = (typeof product.discountedPrice !== 'undefined' && product.hasDiscount) ? product.discountedPrice : product.price;
+          let hasRealLink = false;
+          let targetUrl = `/products/detail/${product._id}`;
+          if (product.productLink && product.productLink.trim() !== '') {
+            hasRealLink = true;
+            targetUrl = product.productLink.trim();
+            if (!/^https?:\/\//i.test(targetUrl)) {
+              targetUrl = 'https://' + targetUrl;
+            }
+          }
+        %>
+        <article class="fp-product" 
+                 onclick="<% if (hasRealLink) { %>window.open('<%= targetUrl %>', '_blank', 'noopener,noreferrer');<% } else { %>window.location.href='/products/detail/<%= product._id %>';<% } %>"
+                 style="cursor: pointer;">
           <div class="fp-img-container">
-            <% if (product.imageUrl && product.imageUrl.trim() !== '') { %>
-              <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
-            <% } else if (product.imagePath && product.imagePath.trim() !== '') { %>
-              <img src="<%= product.imagePath %>" alt="<%= product.name %>" loading="lazy">
-            <% } else { %>
-              <img src="/imgs/img-notfound.jpg" alt="Image Not Found" loading="lazy">
-            <% } %>
+            <% 
+              const homeThumb = product.thumbnail || product.imageUrl || product.imagePath || (product.images && product.images.length > 0 ? product.images[0] : '') || '/imgs/img-notfound.jpg';
+            %>
+            <img src="<%= homeThumb %>" alt="<%= product.name %>" loading="lazy">
 
             <div class="fp-overlay"></div>
             <span class="fp-quick-view" data-i18n="homePage.featuredProducts.quickView">View Details</span>
+            <% if (hasRealLink) { %>
+              <span class="fp-quick-view fp-external-view" data-i18n="homePage.featuredProducts.visitStore"><i class="fas fa-external-link-alt"></i> Visit Store</span>
+            <% } else { %>
+              <span class="fp-quick-view" data-i18n="homePage.featuredProducts.quickView">View Details</span>
+            <% } %>
           </div>
           
           <div class="fp-details">
@@ -135,13 +153,20 @@
             <h3 class="fp-product-title"><%= product.name %></h3>
             
             <div class="fp-wa-action">
-              <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello! I am interested in ${product.name}. Could you share more details?`) %>" 
+              <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in '${product.name}'${displayPrice ? ` (~${displayPrice} EGP)` : ''}. Could you please share more details?`) %>" 
                  target="_blank" 
                  onclick="event.stopPropagation();"
                  class="fp-wa-btn" 
-                 title="Inquire on WhatsApp">
+                 title="<%= displayPrice ? `~ ${Number(displayPrice).toLocaleString('en-US')} EGP` : 'Inquire on WhatsApp' %>">
                 <i class="fab fa-whatsapp"></i>
-                <span data-i18n="common.inquireOnWa">Inquire on WhatsApp</span>
+                <% if (displayPrice && displayPrice > 0) { %>
+                  <% if (product.hasDiscount && product.originalPrice > displayPrice) { %>
+                    <del class="fp-original-price">~ <%= Number(product.originalPrice).toLocaleString('en-US') %></del>
+                  <% } %>
+                  <span class="fp-price-val">~ <%= Number(displayPrice).toLocaleString('en-US') %> <span data-i18n="common.egp">EGP</span></span>
+                <% } else { %>
+                  <span data-i18n="common.inquireOnWa">Inquire on WhatsApp</span>
+                <% } %>
               </a>
             </div>
           </div>
@@ -154,32 +179,6 @@
   </div>
 </section>
 
-      <!-- Category Sections -->
-      <section class="categories">
-          
-        <h2 data-i18n="homePage.categories.title">Curated Collections</h2>
-        <div class="category-grid">
-          <% if (categories && categories.length > 0) { %>
-            <% categories.forEach(category => { %>
-              <a href="/products/<%= category.slug %>">
-                <div class="category-card">
-                  <div class="category-image">
-                    <% if (category.imageUrl || category.imagePath) { %>
-                      <img src="<%= category.imageUrl || category.imagePath %>" alt="<%= category.name %>">
-                    <% } else { %>
-                      <img src="/imgs/default-category.jpg" alt="<%= category.name %>">
-                    <% } %>
-                  </div>
-                  <h3><%= category.name %></h3>
-                </div>
-              </a>
-            <% }) %>
-          <% } %>
-        </div>
-        <div class="see-all-container">
-          <a href="/category" class="see-all-btn" data-i18n="homePage.categories.seeAll">View All Collections</a>
-        </div>
-      </section>
 
       <!-- Bespoke Sourcing & European Concierge Section -->
       <section id="germany-request" class="germany-request-hero search-hero">

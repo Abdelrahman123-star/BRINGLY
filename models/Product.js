@@ -28,6 +28,19 @@ const productSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    images: [{
+        type: String,
+        default: ''
+    }],
+    thumbnail: {
+        type: String,
+        default: ''
+    },
+    productLink: {
+        type: String,
+        default: '',
+        trim: true
+    },
     stock: {
         type: Number,
         required: true,

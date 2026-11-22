@@ -1,7 +1,7 @@
 <footer>
-  <div class="footer-inner">
-    <!-- Col 1: Authentic Journey & Direct WhatsApp -->
-    <div class="footer-brand-col">
+  <div class="footer-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px;">
+    <!-- Brand & Direct WhatsApp -->
+    <div class="footer-brand-col" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 20px;">
       <a href="/" class="footer-logo-lockup" aria-label="BRINGLY — Personal Travel Sourcing">
         <div class="footer-logo-mark">
           <svg class="bringly-brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -24,9 +24,13 @@
           <span class="footer-logo-sub">برينجلي</span>
         </div>
       </a>
+
+      <!-- Commented out description per request
       <p class="footer-story-desc" data-i18n="footer.story">
         Original European products hand-selected during regular trips abroad and hand-carried directly to you. Browse in-stock pieces or submit a custom sourcing request.
       </p>
+      -->
+
       <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I'd%20like%20to%20inquire%20about%20your%20products." 
          target="_blank" 
          rel="noopener noreferrer" 
@@ -42,7 +46,8 @@
       </a>
     </div>
 
-    <!-- Col 2: In-Stock Showroom -->
+    <!-- Col 2: In-Stock Showroom (Commented out per request) -->
+    <!--
     <div class="footer-col">
       <h4 class="footer-heading" data-i18n="footer.inStockShowroom">In-Stock Showroom</h4>
       <div class="footer-links">
@@ -52,8 +57,10 @@
         <a href="/Category" data-i18n="footer.browseAll">Browse All Pieces</a>
       </div>
     </div>
+    -->
 
-    <!-- Col 3: Sourcing Desk -->
+    <!-- Col 3: Sourcing Desk (Commented out per request) -->
+    <!--
     <div class="footer-col">
       <h4 class="footer-heading" data-i18n="footer.customSourcing">Custom Sourcing</h4>
       <div class="footer-links">
@@ -63,7 +70,14 @@
         <a href="https://wa.me/201006709258?text=Hello%20BRINGLY!%20I%20have%20a%20custom%20sourcing%20request." target="_blank" rel="noopener noreferrer" data-i18n="footer.customInquiries">Custom Inquiries</a>
       </div>
     </div>
+    -->
   </div>
+
+  <div class="footer-bottom">
+    <span>&copy; <%= new Date().getFullYear() %> BRINGLY. <span data-i18n="footer.allRightsReserved">All rights reserved.</span></span>
+    <span class="footer-bottom-contact" data-i18n="footer.ordersViaWhatsApp">Orders & Requests via WhatsApp · +(20) 100 670 9258</span>
+  </div>
+</footer>
 
   <div class="footer-bottom">
     <span>&copy; <%= new Date().getFullYear() %> BRINGLY. <span data-i18n="footer.allRightsReserved">All rights reserved.</span></span>

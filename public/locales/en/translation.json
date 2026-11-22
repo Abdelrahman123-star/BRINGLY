@@ -37,8 +37,8 @@
     "title": "BRINGLY — Curated Sourcing & Authentic German Goods",
     "carousel": {
       "tennis": {
-        "title": "The Grand Slam Club Collection",
-        "description": "Precision tennis racquets, premium court apparel, and bespoke sports gear. Inquire directly on WhatsApp for sourcing and private sets."
+        "title": "Wilson & Pro Tennis Racquets",
+        "description": "Original Wilson, Head, and tournament-grade tennis racquets, strings, and gear sourced directly from Europe. Message us on WhatsApp for availability and custom grip sizing."
       },
       "makeup": {
         "title": "Prestige Beauty & Essential Cosmetics",
@@ -67,8 +67,9 @@
       "searchButton": "Search Collection"
     },
     "featuredProducts": {
-      "title": "Curated Essentials",
-      "quickView": "Quick View",
+      "title": "Featured Products",
+      "quickView": "View Details",
+      "visitStore": "Visit Store",
       "addToCart": "Inquire on WhatsApp",
       "noProducts": "No pieces available in this collection"
     },
@@ -282,6 +283,9 @@
     "category": "Category*",
     "selectCategory": "Select a category",
     "description": "Description*",
+    "productLink": "Real Product Link (Optional)",
+    "productLinkPlaceholder": "https://example.com/product",
+    "productLinkHint": "If entered, clicking this product on the home page opens this link directly.",
     "deleteProduct": "Delete Product",
     "deleteConfirm": "Are you sure you want to delete",
     "deleteWarning": "This action cannot be undone."

@@ -107,7 +107,10 @@ exports.createProduct = async (req, res) => {
             productStock: stock, 
             productCategory: category,
             productDescription: description,
-            imageUrl 
+            imageUrl,
+            productLink,
+            selectedThumbnail,
+            existingImagesJson
         } = req.body;
 
         // Validate required fields
@@ -130,10 +133,68 @@ exports.createProduct = async (req, res) => {
             return res.redirect('/admin/products');
         }
         
-        // Handle image upload
+        // Collect uploaded files
+        let uploadedImages = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            uploadedImages = req.files.map(f => '/uploads/' + f.filename);
+        } else if (req.file) {
+            uploadedImages = ['/uploads/' + req.file.filename];
+        }
+
+        // Collect URL images (supports comma-separated URLs or single URL)
+        let urlImages = [];
+        if (imageUrl && imageUrl.trim()) {
+            urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0);
+        }
+
+        // Collect existing images if passed
+        let existingImages = [];
+        if (existingImagesJson) {
+            try {
+                const parsed = JSON.parse(existingImagesJson);
+                if (Array.isArray(parsed)) {
+                    existingImages = parsed.filter(Boolean);
+                }
+            } catch (e) {}
+        }
+
+        // Combine all images
+        const allImages = [...existingImages, ...uploadedImages, ...urlImages];
+
+        // Determine thumbnail
+        let chosenThumbnail = '';
+        if (selectedThumbnail) {
+            if (selectedThumbnail.startsWith('upload:') || selectedThumbnail.startsWith('new:')) {
+                const idx = parseInt(selectedThumbnail.split(':')[1], 10);
+                if (!isNaN(idx) && uploadedImages[idx]) {
+                    chosenThumbnail = uploadedImages[idx];
+                }
+            } else if (allImages.includes(selectedThumbnail)) {
+                chosenThumbnail = selectedThumbnail;
+            } else {
+                const idx = parseInt(selectedThumbnail, 10);
+                if (!isNaN(idx) && allImages[idx]) {
+                    chosenThumbnail = allImages[idx];
+                }
+            }
+        }
+
+        // Fallback thumbnail if not explicitly chosen
+        if (!chosenThumbnail && allImages.length > 0) {
+            chosenThumbnail = allImages[0];
+        }
+
+        let mainImageUrl = '';
         let imagePath = '';
-        if (req.file) {
-            imagePath = '/uploads/' + req.file.filename;
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+            mainImageUrl = chosenThumbnail;
+        } else if (chosenThumbnail) {
+            imagePath = chosenThumbnail;
+        }
+
+        let formattedLink = productLink ? productLink.trim() : '';
+        if (formattedLink && !/^https?:\/\//i.test(formattedLink)) {
+            formattedLink = 'https://' + formattedLink;
         }
 
         const newProduct = new Product({
@@ -142,8 +203,11 @@ exports.createProduct = async (req, res) => {
             stock: parsedStock,
             category,
             description: description || '',
-            imageUrl: imageUrl || '',
-            imagePath
+            imageUrl: mainImageUrl,
+            imagePath,
+            thumbnail: chosenThumbnail,
+            images: allImages,
+            productLink: formattedLink
         });
 
         await newProduct.save();
@@ -166,7 +230,10 @@ exports.updateProduct = async (req, res) => {
             productStock: stock, 
             productCategory: category,
             productDescription: description,
-            imageUrl 
+            imageUrl,
+            productLink,
+            selectedThumbnail,
+            existingImagesJson
         } = req.body;
 
         // Validate required fields
@@ -186,25 +253,95 @@ exports.updateProduct = async (req, res) => {
             return res.status(400).json({ error: 'Please enter a valid stock quantity' });
         }
 
+        const currentProduct = await Product.findById(id);
+        if (!currentProduct) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Collect existing images
+        let existingImages = [];
+        if (typeof existingImagesJson !== 'undefined') {
+            try {
+                const parsed = JSON.parse(existingImagesJson);
+                if (Array.isArray(parsed)) {
+                    existingImages = parsed.filter(Boolean);
+                }
+            } catch (e) {}
+        } else if (currentProduct.images && currentProduct.images.length > 0) {
+            existingImages = [...currentProduct.images];
+        } else if (currentProduct.imagePath || currentProduct.imageUrl) {
+            existingImages = [currentProduct.imagePath || currentProduct.imageUrl].filter(Boolean);
+        }
+
+        // Collect newly uploaded files
+        let uploadedImages = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            uploadedImages = req.files.map(f => '/uploads/' + f.filename);
+        } else if (req.file) {
+            uploadedImages = ['/uploads/' + req.file.filename];
+        }
+
+        // Collect new URL images
+        let urlImages = [];
+        if (imageUrl && imageUrl.trim()) {
+            urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0 && !existingImages.includes(u));
+        }
+
+        // Combine all images
+        const allImages = [...existingImages, ...uploadedImages, ...urlImages];
+
+        // Determine thumbnail
+        let chosenThumbnail = '';
+        if (selectedThumbnail) {
+            if (selectedThumbnail.startsWith('upload:') || selectedThumbnail.startsWith('new:')) {
+                const idx = parseInt(selectedThumbnail.split(':')[1], 10);
+                if (!isNaN(idx) && uploadedImages[idx]) {
+                    chosenThumbnail = uploadedImages[idx];
+                }
+            } else if (allImages.includes(selectedThumbnail)) {
+                chosenThumbnail = selectedThumbnail;
+            } else {
+                const idx = parseInt(selectedThumbnail, 10);
+                if (!isNaN(idx) && allImages[idx]) {
+                    chosenThumbnail = allImages[idx];
+                }
+            }
+        }
+
+        // Fallback thumbnail if none resolved
+        if (!chosenThumbnail) {
+            if (currentProduct.thumbnail && allImages.includes(currentProduct.thumbnail)) {
+                chosenThumbnail = currentProduct.thumbnail;
+            } else if (allImages.length > 0) {
+                chosenThumbnail = allImages[0];
+            }
+        }
+
+        let mainImageUrl = '';
+        let imagePath = '';
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+            mainImageUrl = chosenThumbnail;
+        } else if (chosenThumbnail) {
+            imagePath = chosenThumbnail;
+        }
+
+        let formattedLink = typeof productLink !== 'undefined' ? productLink.trim() : '';
+        if (formattedLink && !/^https?:\/\//i.test(formattedLink)) {
+            formattedLink = 'https://' + formattedLink;
+        }
+
         const updateData = {
             name,
             price: parsedPrice,
             stock: parsedStock,
             category: category,
-            description: description || ''
+            description: description || '',
+            productLink: formattedLink,
+            images: allImages,
+            thumbnail: chosenThumbnail,
+            imagePath,
+            imageUrl: mainImageUrl
         };
-
-        // Handle image updates
-        if (req.file) {
-            // If a new file is uploaded, use the file path
-            updateData.imagePath = '/uploads/' + req.file.filename;
-            updateData.imageUrl = '';
-        } else if (imageUrl) {
-            // If a new URL is provided, use that
-            updateData.imageUrl = imageUrl;
-            updateData.imagePath = '';
-        }
-        // If neither is provided, keep the existing image
 
         const updatedProduct = await Product.findByIdAndUpdate(
             id, 
@@ -214,6 +351,10 @@ exports.updateProduct = async (req, res) => {
 
         if (!updatedProduct) {
             return res.status(404).json({ error: 'Product not found' });
+        }
+
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ success: true, message: 'Product updated successfully', product: updatedProduct });
         }
 
         req.flash('success', 'Product updated successfully');

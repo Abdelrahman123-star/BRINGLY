@@ -52,6 +52,9 @@ router.get('/:id', async (req, res) => {
 router.post('/create', safeUpload, productController.createProduct);
 router.post('/', safeUpload, productController.createProduct);
 
+// Reorder products in bulk (MUST be before /:id)
+router.post('/reorder', productController.reorderProducts);
+
 // Update product (supports both POST and PUT)
 router.post('/:id', safeUpload, productController.updateProduct);
 router.put('/:id', safeUpload, productController.updateProduct);

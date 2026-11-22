@@ -47,6 +47,11 @@ const productSchema = new mongoose.Schema({
         min: 0,
         default: 0
     },
+    sortOrder: {
+        type: Number,
+        default: 0,
+        index: true
+    },
     rating: {
         type: Number,
         default: 0,
@@ -70,6 +75,7 @@ productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
+productSchema.index({ sortOrder: 1, createdAt: -1 });
 
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 

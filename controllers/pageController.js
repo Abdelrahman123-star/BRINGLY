@@ -6,8 +6,8 @@ exports.showHome = async (req, res) => {
     try {
         const [products, categories] = await Promise.all([
             Product.find()
-                .sort({ createdAt: -1 })
-                .limit(5),
+                .sort({ sortOrder: 1, createdAt: -1 })
+                .limit(10),
             Category.find()
                 .sort({ name: 1 }) // Sort categories alphabetically
         ]);
@@ -122,12 +122,18 @@ exports.showProductsByCategory = async (req, res) => {
         }
 
         const filter = req.query.filter || 'all';
-        const sort = req.query.sort || 'newest';
+        const sort = req.query.sort || 'curated';
         const rating = parseFloat(req.query.rating) || 0;
+
+        let sortOption = { sortOrder: 1, createdAt: -1 };
+        if (sort === 'price-low' || sort === 'price-asc') sortOption = { price: 1 };
+        else if (sort === 'price-high' || sort === 'price-desc') sortOption = { price: -1 };
+        else if (sort === 'rating') sortOption = { rating: -1 };
+        else if (sort === 'newest') sortOption = { createdAt: -1 };
 
         let products = await Product.find({ category: category._id })
             .populate('category', 'name description')
-            .sort({ createdAt: -1 });
+            .sort(sortOption);
 
         const activeDiscounts = await Discount.find();
 

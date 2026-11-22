@@ -26,6 +26,89 @@ document.addEventListener('DOMContentLoaded', function() {
   const selectedThumbnailInput = document.getElementById('selectedThumbnail');
   const existingImagesJsonInput = document.getElementById('existingImagesJson');
 
+  // Rich Text Editor elements & sync functions
+  const descriptionEditor = document.getElementById('productDescriptionEditor');
+  const descriptionInput = document.getElementById('productDescription');
+
+  function syncDescription() {
+    if (descriptionEditor && descriptionInput) {
+      descriptionInput.value = descriptionEditor.innerHTML.trim();
+    }
+  }
+
+  function setEditorContent(content) {
+    if (descriptionEditor) {
+      descriptionEditor.innerHTML = content || '';
+    }
+    if (descriptionInput) {
+      descriptionInput.value = content || '';
+    }
+  }
+
+  // Set up Rich Text Editor toolbar & keyboard shortcuts
+  if (descriptionEditor) {
+    document.querySelectorAll('.rte-btn[data-format]').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const format = this.dataset.format;
+        descriptionEditor.focus();
+
+        if (format === 'h1' || format === 'h2' || format === 'p') {
+          document.execCommand('formatBlock', false, '<' + format + '>');
+        } else if (format === 'bold') {
+          document.execCommand('bold', false, null);
+        } else if (format === 'italic') {
+          document.execCommand('italic', false, null);
+        } else if (format === 'underline') {
+          document.execCommand('underline', false, null);
+        } else if (format === 'ul') {
+          document.execCommand('insertUnorderedList', false, null);
+        } else if (format === 'ol') {
+          document.execCommand('insertOrderedList', false, null);
+        } else if (format === 'break') {
+          // Native <br> line break
+          document.execCommand('insertLineBreak');
+        } else if (format === 'clear') {
+          document.execCommand('removeFormat', false, null);
+          document.execCommand('formatBlock', false, '<p>');
+        } else if (format === 'link') {
+          const url = prompt('Enter link URL (e.g. https://...):', 'https://');
+          if (url && url.trim() && url.trim() !== 'https://') {
+            const trimmedUrl = url.trim();
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed || selection.toString().trim() === '') {
+              document.execCommand('insertHTML', false, `<a href="${trimmedUrl}" target="_blank" rel="noopener noreferrer">${trimmedUrl}</a>`);
+            } else {
+              document.execCommand('createLink', false, trimmedUrl);
+            }
+          }
+        } else if (format === 'unlink') {
+          document.execCommand('unlink', false, null);
+        }
+
+        syncDescription();
+      });
+    });
+
+    descriptionEditor.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Shift + Enter: Insert <br> without breaking block
+          e.preventDefault();
+          document.execCommand('insertLineBreak');
+          syncDescription();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        const linkBtn = document.querySelector('.rte-btn[data-format="link"]');
+        if (linkBtn) linkBtn.click();
+      }
+    });
+
+    descriptionEditor.addEventListener('input', syncDescription);
+    descriptionEditor.addEventListener('blur', syncDescription);
+  }
+
   // In-memory array of photos
   // Each item: { id, type: 'existing' | 'upload' | 'url', src, file, isThumbnail }
   let currentPhotos = [];
@@ -290,9 +373,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (nameInput) nameInput.value = product.name || '';
       if (priceInput) priceInput.value = product.price || 0;
       if (stockInput) stockInput.value = product.stock || 0;
-      if (descriptionInput) descriptionInput.value = product.description || '';
       if (productLinkInput) productLinkInput.value = product.productLink || '';
       if (imageUrlInput) imageUrlInput.value = '';
+      
+      // Load description into Rich Text Editor
+      setEditorContent(product.description || '');
       
       // Handle category selection
       const categorySelect = document.getElementById('productCategory');
@@ -374,6 +459,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset photos
     currentPhotos = [];
     renderGallery();
+
+    // Reset Rich Text Editor
+    setEditorContent('');
     
     document.getElementById('modalTitle').textContent = 'Add New Product';
     document.getElementById('submitBtn').textContent = 'Add Product';
@@ -399,10 +487,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Make sure syncInputs runs right before form submission
+  // Make sure syncInputs and syncDescription run right before form submission
   if (productForm) {
-    productForm.addEventListener('submit', function() {
+    productForm.addEventListener('submit', function(e) {
       syncInputs();
+      syncDescription();
+
+      const text = (descriptionEditor ? descriptionEditor.innerText.trim() : '') || (descriptionInput ? descriptionInput.value.trim() : '');
+      if (!text && (!descriptionEditor || !descriptionEditor.querySelector('img'))) {
+        e.preventDefault();
+        alert('Please enter a product description.');
+        if (descriptionEditor) descriptionEditor.focus();
+        return;
+      }
     });
   }
 });

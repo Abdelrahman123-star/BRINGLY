@@ -35,7 +35,7 @@ exports.searchProducts = async (req, res) => {
         // Execute search
         const products = await Product.find(query)
             .populate('category', 'name')
-            .sort({ createdAt: -1 });
+            .sort({ sortOrder: 1, createdAt: -1 });
 
         // Get all categories for the filter dropdown
         const categories = await Category.find().sort('name');

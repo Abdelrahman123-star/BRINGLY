@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../components/favicon') %>
   <title>
     <%= typeof searchTerm !== 'undefined' && searchTerm ? `Search: "${searchTerm}" — BRINGLY` : (typeof category !== 'undefined' && category ? `${category.name} — BRINGLY` : 'Curated Showroom — BRINGLY') %>
   </title>
@@ -76,14 +77,6 @@
           <p><%= category.description %></p>
         <% } %>
       </section>
-
-    <% } else { %>
-      <!-- General Catalog Header -->
-      <section class="category-header" aria-label="Catalog Overview">
-        <span class="category-tag" data-i18n="productsCatalog.atelierCatalog">Atelier Catalog</span>
-        <h1 data-i18n="productsCatalog.curatedPieces">Curated Pieces & Collections</h1>
-        <p data-i18n="productsCatalog.catalogIntro">Explore our seasonal lookbook of tailored apparel, luxury essentials, and sports club gear. Contact our styling concierge directly on WhatsApp for sizing and orders.</p>
-      </section>
     <% } %>
 
     <!-- Filter & Sort Toolbar -->
@@ -125,7 +118,6 @@
             </div>
 
             <div class="product-info">
-              <span class="product-collection-tag" data-i18n="productsCatalog.atelierSelection">Atelier Selection</span>
               <h3><%= product.name %></h3>
 
               <div class="product-stock-tag <%= product.stock > 10 ? 'in-stock' : (product.stock > 0 ? 'low-stock' : 'out-of-stock') %>">

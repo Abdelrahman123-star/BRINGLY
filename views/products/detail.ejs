@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <%- include('../components/favicon') %>
     <!-- dah btaa3 el icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Distinctive Atelier Typographic System -->
@@ -15,8 +16,6 @@
         <%= product.name %> — BRINGLY
     </title>
     <link rel="stylesheet" href="/css/productsAndCart.css">
-    <!-- Add Lightbox CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
 
     <!-- Add i18next and plugins from CDN -->
     <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
@@ -25,75 +24,6 @@
     <script src="/js/i18n.js"></script>
 
     <style>
-        /* Zoom container styles */
-        .medium-zoom-overlay {
-            background-color: rgba(0, 0, 0, 0.8) !important;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-
-        .medium-zoom-image {
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-
-        .medium-zoom-image:hover {
-            transform: scale(1.02);
-        }
-
-        /* Product image container */
-        .product-images {
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .main-image {
-            width: 100%;
-            height: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .product-images:hover .main-image {
-            transform: scale(1.02);
-        }
-
-        /* Zoom hint */
-        .zoom-hint {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .product-images:hover .zoom-hint {
-            opacity: 1;
-        }
-
-        /* Lightbox custom styles */
-        .lb-data .lb-caption {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .lb-data .lb-number {
-            font-size: 14px;
-        }
-
-        .lb-closeContainer {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-
         /* Add these styles to your existing styles */
         .stock-status {
             display: inline-flex;
@@ -214,48 +144,43 @@
                     <div class="product-layout">
                         <!-- Left Column: Product Images -->
                         <div class="product-gallery">
-                            <div class="main-image-container">
-                                <% 
-                                    const mainDetailImg = product.thumbnail || product.imageUrl || product.imagePath ||
-                                        (product.images && product.images.length > 0 ? product.images[0] : '') ||
-                                        '/imgs/img-notfound.jpg';
-                                %>
-                                <a id="mainDetailLink" href="<%= mainDetailImg %>" data-lightbox="product-image"
-                                    data-title="<%= product.name %>">
-                                    <img id="mainDetailImg" src="<%= mainDetailImg %>" alt="<%= product.name %>"
-                                        class="main-image">
-                                </a>
-                                <div class="zoom-hint" data-i18n="productDetailPage.zoom.hint">
-                                    <i class="fas fa-search-plus"></i> Click to zoom
-                                </div>
+                            <% 
+                                const mainDetailImg = product.thumbnail || product.imageUrl || product.imagePath ||
+                                    (product.images && product.images.length > 0 ? product.images[0] : '') ||
+                                    '/imgs/img-notfound.jpg';
+
+                                let galleryImages = [];
+                                if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                                    galleryImages = product.images.filter(Boolean);
+                                }
+                                if (galleryImages.length === 0) {
+                                    if (product.thumbnail) galleryImages.push(product.thumbnail);
+                                    if (product.imageUrl && !galleryImages.includes(product.imageUrl)) galleryImages.push(product.imageUrl);
+                                    if (product.imagePath && !galleryImages.includes(product.imagePath)) galleryImages.push(product.imagePath);
+                                }
+                                if (mainDetailImg && !galleryImages.includes(mainDetailImg) && mainDetailImg !== '/imgs/img-notfound.jpg') {
+                                    galleryImages.unshift(mainDetailImg);
+                                }
+                            %>
+
+                            <div class="main-image-stage" id="mainImageStage" onclick="openZoomModal(event)" title="Click to zoom and pan">
+                                <img id="mainDetailImg" src="<%= mainDetailImg %>" alt="<%= product.name %>" class="main-image">
+                                <button type="button" class="zoom-action-badge" onclick="openZoomModal(event)" aria-label="Zoom and inspect image">
+                                    <i class="fas fa-search-plus"></i>
+                                    <span>Zoom & Inspect</span>
+                                </button>
                             </div>
 
-                            <% if (product.images && product.images.length > 1) { %>
-                                <div class="detail-gallery-strip"
-                                    style="display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px;">
-                                    <% product.images.forEach(function(imgUrl, idx) { %>
-                                        <div class="detail-thumb-card <%= (imgUrl === mainDetailImg) ? 'active' : '' %>"
-                                            style="width: 65px; height: 65px; border-radius: 8px; overflow: hidden; cursor: pointer; flex-shrink: 0; border: 2px solid <%= (imgUrl === mainDetailImg) ? '#ff5722' : '#e2e8f0' %>; transition: border-color 0.2s;"
-                                            onclick="switchDetailPhoto(this, '<%= imgUrl %>')">
-                                            <img src="<%= imgUrl %>" alt="<%= product.name %>"
-                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                        </div>
+                            <% if (galleryImages && galleryImages.length > 1) { %>
+                                <div class="detail-gallery-strip">
+                                    <% galleryImages.forEach(function(imgUrl, idx) { %>
+                                        <button type="button" class="detail-thumb-card <%= (idx === 0) ? 'active' : '' %>"
+                                            onclick="switchDetailPhoto(this, '<%= imgUrl %>', <%= idx %>)"
+                                            aria-label="View photo <%= idx + 1 %>">
+                                            <img src="<%= imgUrl %>" alt="<%= product.name %>">
+                                        </button>
                                     <% }); %>
                                 </div>
-                                <script>
-                                    function switchDetailPhoto(element, src) {
-                                        var mainImg = document.getElementById('mainDetailImg');
-                                        var mainLink = document.getElementById('mainDetailLink');
-                                        if (mainImg) mainImg.src = src;
-                                        if (mainLink) mainLink.href = src;
-                                        document.querySelectorAll('.detail-thumb-card').forEach(function (el) {
-                                            el.style.borderColor = '#e2e8f0';
-                                        });
-                                        if (element) {
-                                            element.style.borderColor = '#ff5722';
-                                        }
-                                    }
-                                </script>
                             <% } %>
                         </div>
 
@@ -287,9 +212,9 @@
 
                             <div class="product-description">
                                 <h3 data-i18n="productDetailPage.description">Craft & Details</h3>
-                                <p>
-                                    <%= product.description %>
-                                </p>
+                                <div class="product-description-content">
+                                    <%- product.description ? (/<[a-z][\s\S]*>/i.test(product.description) ? product.description : product.description.replace(/\n/g, '<br>')) : '' %>
+                                </div>
                             </div>
                             <div
                                 class="stock-status <%= product.stock > 10 ? 'in-stock' : (product.stock > 0 ? 'low-stock' : 'out-of-stock') %>">
@@ -365,22 +290,429 @@
                     </section>
                 </main>
 
+                <!-- Fullscreen Interactive Zoom & Pan Modal -->
+                <div id="productZoomModal" class="product-zoom-modal" role="dialog" aria-modal="true" aria-label="Product Image Viewer">
+                    <!-- Top Navigation & Controls Bar -->
+                    <div class="zoom-modal-topbar">
+                        <div class="zoom-title-area">
+                            <span class="zoom-title-text"><%= product.name %></span>
+                            <% if (galleryImages && galleryImages.length > 1) { %>
+                                <span class="zoom-counter" id="zoomCounter">1 / <%= galleryImages.length %></span>
+                            <% } %>
+                        </div>
+
+                        <div class="zoom-controls">
+                            <div class="zoom-pill-group">
+                                <button type="button" class="zoom-btn" onclick="zoomOut()" title="Zoom Out (-)" aria-label="Zoom Out">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <button type="button" class="zoom-btn zoom-level-btn" onclick="resetZoom()" title="Reset to 100% Fit" aria-label="Reset Zoom">
+                                    <span id="zoomLevelDisplay">100%</span>
+                                </button>
+                                <button type="button" class="zoom-btn" onclick="zoomIn()" title="Zoom In (+)" aria-label="Zoom In">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button type="button" class="zoom-btn zoom-fs-btn" id="zoomFsBtn" onclick="toggleZoomFullscreen()" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="zoom-btn zoom-close-btn" onclick="closeZoomModal()" title="Close Viewer (Esc)" aria-label="Close Viewer">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Viewing Stage & Viewport -->
+                    <div class="zoom-viewport" id="zoomViewport">
+                        <div class="zoom-stage" id="zoomStage">
+                            <img id="zoomModalImg" src="<%= mainDetailImg %>" alt="<%= product.name %>" draggable="false">
+                        </div>
+
+                        <% if (galleryImages && galleryImages.length > 1) { %>
+                            <button type="button" class="zoom-nav-btn zoom-nav-prev" onclick="navigateZoom(-1)" aria-label="Previous photo">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button type="button" class="zoom-nav-btn zoom-nav-next" onclick="navigateZoom(1)" aria-label="Next photo">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        <% } %>
+                    </div>
+
+                    <!-- In-Modal Floating Thumbnail Gallery Dock -->
+                    <% if (galleryImages && galleryImages.length > 1) { %>
+                        <div class="zoom-thumb-dock" id="zoomThumbDock">
+                            <div class="zoom-thumb-track">
+                                <% galleryImages.forEach(function(imgUrl, idx) { %>
+                                    <button type="button" class="zoom-thumb-item <%= (idx === 0) ? 'active' : '' %>"
+                                        onclick="switchDetailPhoto(this, '<%= imgUrl %>', <%= idx %>)"
+                                        data-zoom-idx="<%= idx %>"
+                                        aria-label="Switch to angle <%= idx + 1 %>">
+                                        <img src="<%= imgUrl %>" alt="<%= product.name %> view <%= idx + 1 %>">
+                                    </button>
+                                <% }); %>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <!-- Adaptive Bottom Hints Bar -->
+                    <div class="zoom-hint-bar" id="zoomHintBar">
+                        <span class="desktop-hints"><i class="fas fa-search-plus"></i> Click or double-click to zoom • Drag to pan • Scroll wheel to zoom • Esc to close</span>
+                        <span class="mobile-hints"><i class="fas fa-hand-pointer"></i> Double-tap to zoom • Pinch to expand • Swipe to browse angles</span>
+                    </div>
+                </div>
+
                 <%- include('../components/footer') %>
 
                     <script src="/js/product_cart.js"></script>
-                    <!-- Add Lightbox JS -->
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
                     <script>
-                        lightbox.option({
-                            'resizeDuration': 200,
-                            'wrapAround': true,
-                            'fadeDuration': 300,
-                            'imageFadeDuration': 300,
-                            'positionFromTop': 100,
-                            'maxWidth': 1200,
-                            'maxHeight': 800
-                        });
+                        // Interactive Atelier Zoom & Pan Viewer Controller
+                        (function() {
+                            var galleryPhotos = <%- JSON.stringify(galleryImages) %>;
+                            var currentPhotoIndex = 0;
+                            var zoomScale = 1;
+                            var zoomTransX = 0;
+                            var zoomTransY = 0;
+                            var isPanning = false;
+                            var startPointerX = 0;
+                            var startPointerY = 0;
+                            var startTransX = 0;
+                            var startTransY = 0;
+                            var dragDistance = 0;
+                            var lastTapTime = 0;
+                            var touchStartX = 0;
+                            var touchStartY = 0;
+
+                            function updateTransform(disableTransition) {
+                                var stage = document.getElementById('zoomStage');
+                                var viewport = document.getElementById('zoomViewport');
+                                var levelText = document.getElementById('zoomLevelDisplay');
+                                if (!stage) return;
+
+                                if (disableTransition) {
+                                    stage.classList.add('no-transition');
+                                } else {
+                                    stage.classList.remove('no-transition');
+                                }
+
+                                stage.style.transform = 'translate3d(' + zoomTransX + 'px, ' + zoomTransY + 'px, 0) scale(' + zoomScale + ')';
+                                if (levelText) levelText.textContent = Math.round(zoomScale * 100) + '%';
+
+                                if (viewport) {
+                                    if (zoomScale > 1) {
+                                        viewport.classList.add('is-zoomed');
+                                    } else {
+                                        viewport.classList.remove('is-zoomed');
+                                        viewport.classList.remove('is-dragging');
+                                    }
+                                }
+                            }
+
+                            window.resetZoom = function() {
+                                zoomScale = 1;
+                                zoomTransX = 0;
+                                zoomTransY = 0;
+                                updateTransform(false);
+                            };
+
+                            window.zoomIn = function() {
+                                zoomScale = Math.min(4.5, Math.round((zoomScale + 0.5) * 10) / 10);
+                                updateTransform(false);
+                            };
+
+                            window.zoomOut = function() {
+                                zoomScale = Math.max(1, Math.round((zoomScale - 0.5) * 10) / 10);
+                                if (zoomScale === 1) {
+                                    zoomTransX = 0;
+                                    zoomTransY = 0;
+                                }
+                                updateTransform(false);
+                            };
+
+                            window.toggleZoomFullscreen = function() {
+                                var modal = document.getElementById('productZoomModal');
+                                var fsBtn = document.getElementById('zoomFsBtn');
+                                if (!modal) return;
+
+                                if (!document.fullscreenElement) {
+                                    if (modal.requestFullscreen) modal.requestFullscreen().catch(function(){});
+                                    else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
+                                    if (fsBtn) fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                                } else {
+                                    if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
+                                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                                    if (fsBtn) fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                                }
+                            };
+
+                            function updateCounter() {
+                                var counter = document.getElementById('zoomCounter');
+                                if (counter && galleryPhotos.length > 0) {
+                                    counter.textContent = (currentPhotoIndex + 1) + ' / ' + galleryPhotos.length;
+                                }
+                            }
+
+                            window.openZoomModal = function(e) {
+                                if (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }
+                                var modal = document.getElementById('productZoomModal');
+                                var zoomImg = document.getElementById('zoomModalImg');
+                                var mainImg = document.getElementById('mainDetailImg');
+                                if (!modal) return;
+
+                                if (mainImg && zoomImg) {
+                                    zoomImg.src = mainImg.src;
+                                }
+                                updateCounter();
+                                resetZoom();
+                                modal.classList.add('active');
+                                document.body.style.overflow = 'hidden';
+
+                                document.querySelectorAll('.zoom-thumb-item').forEach(function(el, i) {
+                                    el.classList.toggle('active', i === currentPhotoIndex);
+                                });
+                            };
+
+                            window.closeZoomModal = function() {
+                                var modal = document.getElementById('productZoomModal');
+                                if (!modal) return;
+                                if (document.fullscreenElement) {
+                                    try { document.exitFullscreen(); } catch(err){}
+                                }
+                                modal.classList.remove('active');
+                                document.body.style.overflow = '';
+                                resetZoom();
+                            };
+
+                            window.switchDetailPhoto = function(element, src, idx) {
+                                var mainImg = document.getElementById('mainDetailImg');
+                                var zoomImg = document.getElementById('zoomModalImg');
+                                if (mainImg) mainImg.src = src;
+                                if (zoomImg) {
+                                    zoomImg.classList.add('fading');
+                                    setTimeout(function() {
+                                        zoomImg.src = src;
+                                        zoomImg.classList.remove('fading');
+                                    }, 80);
+                                }
+
+                                if (typeof idx === 'number') {
+                                    currentPhotoIndex = idx;
+                                } else {
+                                    var foundIdx = galleryPhotos.indexOf(src);
+                                    if (foundIdx !== -1) currentPhotoIndex = foundIdx;
+                                }
+
+                                document.querySelectorAll('.detail-thumb-card').forEach(function(el, i) {
+                                    el.classList.toggle('active', i === currentPhotoIndex);
+                                    if (i === currentPhotoIndex && el.scrollIntoView) {
+                                        el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+                                    }
+                                });
+
+                                document.querySelectorAll('.zoom-thumb-item').forEach(function(el, i) {
+                                    el.classList.toggle('active', i === currentPhotoIndex);
+                                    if (i === currentPhotoIndex && el.scrollIntoView) {
+                                        el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+                                    }
+                                });
+
+                                updateCounter();
+                                resetZoom();
+                            };
+
+                            window.navigateZoom = function(dir) {
+                                if (!galleryPhotos || galleryPhotos.length <= 1) return;
+                                currentPhotoIndex = (currentPhotoIndex + dir + galleryPhotos.length) % galleryPhotos.length;
+                                var nextSrc = galleryPhotos[currentPhotoIndex];
+                                switchDetailPhoto(null, nextSrc, currentPhotoIndex);
+                            };
+
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var viewport = document.getElementById('zoomViewport');
+                                var modal = document.getElementById('productZoomModal');
+                                if (!viewport || !modal) return;
+
+                                // Mouse Drag to Pan
+                                viewport.addEventListener('mousedown', function(e) {
+                                    if (e.target.closest('.zoom-nav-btn') || e.target.closest('.zoom-thumb-dock')) return;
+                                    isPanning = true;
+                                    dragDistance = 0;
+                                    startPointerX = e.clientX;
+                                    startPointerY = e.clientY;
+                                    startTransX = zoomTransX;
+                                    startTransY = zoomTransY;
+                                    if (zoomScale > 1) {
+                                        viewport.classList.add('is-dragging');
+                                    }
+                                });
+
+                                window.addEventListener('mousemove', function(e) {
+                                    if (!isPanning) return;
+                                    var dx = e.clientX - startPointerX;
+                                    var dy = e.clientY - startPointerY;
+                                    dragDistance += Math.abs(dx) + Math.abs(dy);
+                                    if (zoomScale > 1) {
+                                        zoomTransX = startTransX + dx;
+                                        zoomTransY = startTransY + dy;
+                                        updateTransform(true);
+                                    }
+                                });
+
+                                window.addEventListener('mouseup', function() {
+                                    if (!isPanning) return;
+                                    isPanning = false;
+                                    viewport.classList.remove('is-dragging');
+                                });
+
+                                // Click on viewport: toggle zoom or reset
+                                viewport.addEventListener('click', function(e) {
+                                    if (e.target.closest('.zoom-nav-btn') || e.target.closest('.zoom-thumb-dock')) return;
+                                    if (dragDistance > 6) return;
+
+                                    if (zoomScale === 1) {
+                                        var rect = viewport.getBoundingClientRect();
+                                        var clickX = e.clientX - (rect.left + rect.width / 2);
+                                        var clickY = e.clientY - (rect.top + rect.height / 2);
+                                        zoomScale = 2.4;
+                                        zoomTransX = -clickX * 1.2;
+                                        zoomTransY = -clickY * 1.2;
+                                        updateTransform(false);
+                                    } else {
+                                        resetZoom();
+                                    }
+                                });
+
+                                // Mouse Wheel Zoom
+                                viewport.addEventListener('wheel', function(e) {
+                                    e.preventDefault();
+                                    var delta = e.deltaY < 0 ? 0.35 : -0.35;
+                                    var prevScale = zoomScale;
+                                    var nextScale = Math.min(4.5, Math.max(1, Math.round((zoomScale + delta) * 10) / 10));
+
+                                    if (nextScale !== prevScale) {
+                                        zoomScale = nextScale;
+                                        if (zoomScale === 1) {
+                                            zoomTransX = 0;
+                                            zoomTransY = 0;
+                                        }
+                                        updateTransform(false);
+                                    }
+                                }, { passive: false });
+
+                                // Touch Gestures: Pinch, Pan, Double-Tap, and Swipe Navigation
+                                var initialTouchDist = 0;
+                                var initialTouchScale = 1;
+
+                                viewport.addEventListener('touchstart', function(e) {
+                                    if (e.touches.length === 1) {
+                                        isPanning = true;
+                                        dragDistance = 0;
+                                        startPointerX = e.touches[0].clientX;
+                                        startPointerY = e.touches[0].clientY;
+                                        touchStartX = e.touches[0].clientX;
+                                        touchStartY = e.touches[0].clientY;
+                                        startTransX = zoomTransX;
+                                        startTransY = zoomTransY;
+                                    } else if (e.touches.length === 2) {
+                                        isPanning = false;
+                                        initialTouchDist = Math.hypot(
+                                            e.touches[0].clientX - e.touches[1].clientX,
+                                            e.touches[0].clientY - e.touches[1].clientY
+                                        );
+                                        initialTouchScale = zoomScale;
+                                    }
+                                }, { passive: true });
+
+                                viewport.addEventListener('touchmove', function(e) {
+                                    if (e.touches.length === 1 && isPanning && zoomScale > 1) {
+                                        var dx = e.touches[0].clientX - startPointerX;
+                                        var dy = e.touches[0].clientY - startPointerY;
+                                        dragDistance += Math.abs(dx) + Math.abs(dy);
+                                        zoomTransX = startTransX + dx;
+                                        zoomTransY = startTransY + dy;
+                                        updateTransform(true);
+                                    } else if (e.touches.length === 2 && initialTouchDist > 0) {
+                                        var dist = Math.hypot(
+                                            e.touches[0].clientX - e.touches[1].clientX,
+                                            e.touches[0].clientY - e.touches[1].clientY
+                                        );
+                                        var scaleRatio = dist / initialTouchDist;
+                                        zoomScale = Math.min(4.5, Math.max(1, Math.round(initialTouchScale * scaleRatio * 10) / 10));
+                                        updateTransform(true);
+                                    }
+                                }, { passive: true });
+
+                                viewport.addEventListener('touchend', function(e) {
+                                    if (e.touches.length === 0) {
+                                        isPanning = false;
+                                        var now = Date.now();
+                                        var tapInterval = now - lastTapTime;
+
+                                        // Double Tap to Zoom / Reset on mobile
+                                        if (tapInterval < 320 && dragDistance < 10) {
+                                            if (zoomScale === 1) {
+                                                var rect = viewport.getBoundingClientRect();
+                                                var clickX = startPointerX - (rect.left + rect.width / 2);
+                                                var clickY = startPointerY - (rect.top + rect.height / 2);
+                                                zoomScale = 2.4;
+                                                zoomTransX = -clickX * 1.2;
+                                                zoomTransY = -clickY * 1.2;
+                                                updateTransform(false);
+                                            } else {
+                                                resetZoom();
+                                            }
+                                            lastTapTime = 0;
+                                            return;
+                                        }
+                                        lastTapTime = now;
+
+                                        // Swipe horizontally between photos if at scale 1
+                                        if (zoomScale === 1 && e.changedTouches && e.changedTouches.length === 1) {
+                                            var endX = e.changedTouches[0].clientX;
+                                            var endY = e.changedTouches[0].clientY;
+                                            var diffX = endX - touchStartX;
+                                            var diffY = endY - touchStartY;
+                                            if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+                                                if (diffX < 0) navigateZoom(1);  // Swipe left -> next
+                                                else navigateZoom(-1);            // Swipe right -> prev
+                                            }
+                                        }
+
+                                        if (zoomScale <= 1) {
+                                            resetZoom();
+                                        }
+                                    }
+                                }, { passive: true });
+
+                                // Fullscreen Change Listener
+                                document.addEventListener('fullscreenchange', function() {
+                                    var fsBtn = document.getElementById('zoomFsBtn');
+                                    if (fsBtn) {
+                                        fsBtn.innerHTML = document.fullscreenElement ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                                    }
+                                });
+
+                                // Keyboard Navigation
+                                window.addEventListener('keydown', function(e) {
+                                    if (!modal.classList.contains('active')) return;
+                                    if (e.key === 'Escape') {
+                                        closeZoomModal();
+                                    } else if (e.key === 'ArrowLeft') {
+                                        navigateZoom(-1);
+                                    } else if (e.key === 'ArrowRight') {
+                                        navigateZoom(1);
+                                    } else if (e.key === '+' || e.key === '=') {
+                                        zoomIn();
+                                    } else if (e.key === '-' || e.key === '_') {
+                                        zoomOut();
+                                    } else if (e.key === '0') {
+                                        resetZoom();
+                                    }
+                                });
+                            });
+                        })();
                     </script>
                     <script>
                         // Add event listener for the Add to Cart button
@@ -481,44 +813,547 @@
                             padding: 2rem;
                         }
 
-                        /* Product Gallery Styles */
+                        /* Product Gallery Styles - Luxury Studio Display */
                         .product-gallery {
                             position: relative;
+                            width: 100%;
+                            display: flex;
+                            flex-direction: column;
                         }
 
-                        .main-image-container {
+                        /* Frameless, seamless product stage - no nested borders or boxed cards */
+                        .main-image-stage {
                             position: relative;
-                            border-radius: 15px;
-                            overflow: hidden;
-                            background: #f8f9fa;
+                            width: 100%;
+                            height: 500px;
+                            min-height: 440px;
+                            max-height: 540px;
+                            background: transparent !important;
+                            border: none !important;
+                            box-shadow: none !important;
+                            border-radius: 0 !important;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: zoom-in;
+                            padding: 12px;
+                            box-sizing: border-box;
+                            transition: transform 0.25s ease;
                         }
 
                         .main-image {
-                            width: 100%;
-                            height: auto;
-                            object-fit: cover;
-                            transition: transform 0.3s ease;
+                            max-width: 100% !important;
+                            max-height: 480px !important;
+                            width: auto !important;
+                            height: auto !important;
+                            object-fit: contain !important;
+                            object-position: center !important;
+                            display: block;
+                            margin: auto;
+                            border: none !important;
+                            box-shadow: none !important;
+                            filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.08));
+                            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
                         }
 
-                        .main-image:hover {
-                            transform: scale(1.05);
+                        .main-image-stage:hover .main-image {
+                            transform: scale(1.03);
+                            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.12));
                         }
 
-                        .zoom-hint {
+                        .zoom-action-badge {
                             position: absolute;
-                            bottom: 15px;
-                            right: 15px;
-                            background: rgba(0, 0, 0, 0.7);
-                            color: white;
-                            padding: 8px 15px;
-                            border-radius: 20px;
-                            font-size: 0.9rem;
-                            opacity: 0;
-                            transition: opacity 0.3s ease;
+                            bottom: 12px;
+                            right: 12px;
+                            background: rgba(18, 18, 18, 0.9);
+                            backdrop-filter: blur(8px);
+                            -webkit-backdrop-filter: blur(8px);
+                            color: #ffffff;
+                            border: 1px solid rgba(255, 255, 255, 0.16);
+                            padding: 7px 16px;
+                            border-radius: 9999px;
+                            font-family: inherit;
+                            font-size: 0.82rem;
+                            font-weight: 600;
+                            letter-spacing: 0.02em;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            cursor: pointer;
+                            opacity: 0.88;
+                            transform: translateY(0);
+                            transition: all 0.25s ease;
+                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+                            z-index: 2;
                         }
 
-                        .main-image-container:hover .zoom-hint {
+                        .main-image-stage:hover .zoom-action-badge {
                             opacity: 1;
+                            transform: translateY(-2px);
+                            background: #ff5722;
+                            border-color: #ff5722;
+                            box-shadow: 0 6px 18px rgba(255, 87, 34, 0.35);
+                        }
+
+                        /* Thumbnail Gallery Strip */
+                        .detail-gallery-strip {
+                            display: flex;
+                            gap: 10px;
+                            margin-top: 14px;
+                            overflow-x: auto;
+                            padding: 6px 2px 10px;
+                            scrollbar-width: thin;
+                        }
+
+                        .detail-thumb-card {
+                            width: 72px;
+                            height: 72px;
+                            border-radius: 12px;
+                            overflow: hidden;
+                            cursor: pointer;
+                            flex-shrink: 0;
+                            background: #ffffff;
+                            border: 2px solid #E8E0D5;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 4px;
+                            box-sizing: border-box;
+                            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+                            outline: none;
+                        }
+
+                        .detail-thumb-card:hover {
+                            border-color: #C46849;
+                            transform: translateY(-2px);
+                        }
+
+                        .detail-thumb-card.active {
+                            border-color: #ff5722 !important;
+                            box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.25);
+                        }
+
+                        .detail-thumb-card img {
+                            max-width: 100%;
+                            max-height: 100%;
+                            width: auto;
+                            height: auto;
+                            object-fit: contain;
+                            display: block;
+                            margin: auto;
+                            pointer-events: none;
+                        }
+
+                        /* Fullscreen Luxury Neutral Studio Zoom & Pan Modal Styles */
+                        .product-zoom-modal {
+                            display: none;
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100vw;
+                            height: 100vh;
+                            z-index: 999999;
+                            background: rgba(8, 8, 8, 0.96);
+                            backdrop-filter: blur(28px) saturate(140%);
+                            -webkit-backdrop-filter: blur(28px) saturate(140%);
+                            flex-direction: column;
+                            user-select: none;
+                            -webkit-user-select: none;
+                            animation: zoomModalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                            overflow: hidden;
+                        }
+
+                        .product-zoom-modal.active {
+                            display: flex;
+                        }
+
+                        @keyframes zoomModalFadeIn {
+                            from { opacity: 0; transform: scale(0.985); }
+                            to { opacity: 1; transform: scale(1); }
+                        }
+
+                        /* Top Navigation & Controls Bar */
+                        .zoom-modal-topbar {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding: 18px 28px;
+                            background: linear-gradient(180deg, rgba(12, 12, 12, 0.95) 0%, rgba(12, 12, 12, 0) 100%);
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                            z-index: 20;
+                            flex-shrink: 0;
+                            gap: 16px;
+                        }
+
+                        .zoom-title-area {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                            color: #ffffff;
+                            font-family: 'Marcellus', Georgia, serif;
+                            font-size: 1.18rem;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            max-width: 55%;
+                        }
+
+                        .zoom-title-text {
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            letter-spacing: 0.02em;
+                        }
+
+                        .zoom-counter {
+                            font-family: 'Albert Sans', -apple-system, sans-serif;
+                            font-size: 0.82rem;
+                            font-weight: 700;
+                            background: rgba(255, 255, 255, 0.1);
+                            color: #f1f1f1;
+                            border: 1px solid rgba(255, 255, 255, 0.18);
+                            padding: 3px 10px;
+                            border-radius: 9999px;
+                            letter-spacing: 0.05em;
+                            flex-shrink: 0;
+                        }
+
+                        .zoom-controls {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                        }
+
+                        .zoom-pill-group {
+                            display: flex;
+                            align-items: center;
+                            background: rgba(24, 24, 24, 0.85);
+                            backdrop-filter: blur(14px);
+                            -webkit-backdrop-filter: blur(14px);
+                            border: 1px solid rgba(255, 255, 255, 0.14);
+                            border-radius: 9999px;
+                            padding: 3px 4px;
+                            gap: 2px;
+                            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+                        }
+
+                        .zoom-btn {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background: transparent;
+                            border: none;
+                            color: #e5e5e5;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            font-size: 0.92rem;
+                            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                            outline: none;
+                        }
+
+                        .zoom-btn:hover {
+                            background: rgba(255, 255, 255, 0.18);
+                            color: #ffffff;
+                            transform: scale(1.06);
+                        }
+
+                        .zoom-btn.zoom-level-btn {
+                            width: auto;
+                            padding: 0 12px;
+                            border-radius: 9999px;
+                            font-family: 'Albert Sans', sans-serif;
+                            font-size: 0.82rem;
+                            font-weight: 700;
+                            letter-spacing: 0.04em;
+                            color: #e5e5e5;
+                        }
+                        .zoom-btn.zoom-level-btn:hover {
+                            color: #ff7a50;
+                        }
+
+                        .zoom-btn.zoom-close-btn {
+                            width: 42px;
+                            height: 42px;
+                            border-radius: 50%;
+                            background: rgba(255, 255, 255, 0.1);
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            color: #ffffff;
+                            font-size: 1.05rem;
+                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+                        }
+
+                        .zoom-btn.zoom-close-btn:hover {
+                            background: #ff5722;
+                            border-color: #ff5722;
+                            color: #ffffff;
+                            transform: scale(1.1) rotate(90deg);
+                            box-shadow: 0 6px 20px rgba(255, 87, 34, 0.4);
+                        }
+
+                        /* Main Viewing Stage & Viewport */
+                        .zoom-viewport {
+                            position: relative;
+                            flex: 1;
+                            overflow: hidden;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: zoom-in;
+                            padding: 10px 20px;
+                            box-sizing: border-box;
+                        }
+
+                        .zoom-viewport.is-zoomed {
+                            cursor: grab;
+                        }
+
+                        .zoom-viewport.is-dragging {
+                            cursor: grabbing;
+                        }
+
+                        .zoom-stage {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transform-origin: center center;
+                            transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+                            will-change: transform;
+                        }
+
+                        .zoom-stage.no-transition {
+                            transition: none !important;
+                        }
+
+                        .zoom-stage img {
+                            max-width: 86vw;
+                            max-height: 72vh;
+                            width: auto;
+                            height: auto;
+                            object-fit: contain;
+                            user-select: none;
+                            -webkit-user-drag: none;
+                            filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.65));
+                            pointer-events: none;
+                            transition: opacity 0.15s ease;
+                        }
+
+                        .zoom-stage img.fading {
+                            opacity: 0.3;
+                        }
+
+                        /* Navigation Arrows */
+                        .zoom-nav-btn {
+                            position: absolute;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            width: 48px;
+                            height: 48px;
+                            border-radius: 50%;
+                            background: rgba(22, 22, 22, 0.85);
+                            backdrop-filter: blur(14px);
+                            -webkit-backdrop-filter: blur(14px);
+                            border: 1px solid rgba(255, 255, 255, 0.16);
+                            color: #ffffff;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 1.15rem;
+                            cursor: pointer;
+                            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+                            z-index: 15;
+                            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+                            outline: none;
+                        }
+
+                        .zoom-nav-btn:hover {
+                            background: #ff5722;
+                            border-color: #ff5722;
+                            transform: translateY(-50%) scale(1.12);
+                            box-shadow: 0 8px 24px rgba(255, 87, 34, 0.45);
+                        }
+
+                        .zoom-nav-prev {
+                            left: 24px;
+                        }
+
+                        .zoom-nav-next {
+                            right: 24px;
+                        }
+
+                        /* In-Modal Floating Thumbnail Dock */
+                        .zoom-thumb-dock {
+                            position: absolute;
+                            bottom: 48px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            z-index: 20;
+                            background: rgba(18, 18, 18, 0.88);
+                            backdrop-filter: blur(18px);
+                            -webkit-backdrop-filter: blur(18px);
+                            border: 1px solid rgba(255, 255, 255, 0.14);
+                            border-radius: 18px;
+                            padding: 7px 10px;
+                            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+                            max-width: 90vw;
+                            overflow-x: auto;
+                            scrollbar-width: none;
+                        }
+                        .zoom-thumb-dock::-webkit-scrollbar {
+                            display: none;
+                        }
+
+                        .zoom-thumb-track {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+
+                        .zoom-thumb-item {
+                            width: 52px;
+                            height: 52px;
+                            border-radius: 12px;
+                            background: #ffffff;
+                            border: 2px solid rgba(255, 255, 255, 0.2);
+                            overflow: hidden;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 3px;
+                            box-sizing: border-box;
+                            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+                            outline: none;
+                            flex-shrink: 0;
+                        }
+
+                        .zoom-thumb-item:hover {
+                            border-color: #ff8a65;
+                            transform: translateY(-2px);
+                        }
+
+                        .zoom-thumb-item.active {
+                            border-color: #ff5722 !important;
+                            transform: translateY(-3px) scale(1.08);
+                            box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.45), 0 8px 16px rgba(0, 0, 0, 0.4);
+                        }
+
+                        .zoom-thumb-item img {
+                            max-width: 100%;
+                            max-height: 100%;
+                            width: auto;
+                            height: auto;
+                            object-fit: contain;
+                            display: block;
+                            pointer-events: none;
+                        }
+
+                        /* Bottom Hints Guidance Bar */
+                        .zoom-hint-bar {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 10px 20px;
+                            background: rgba(10, 10, 10, 0.95);
+                            border-top: 1px solid rgba(255, 255, 255, 0.08);
+                            color: rgba(255, 255, 255, 0.65);
+                            font-family: 'Albert Sans', sans-serif;
+                            font-size: 0.8rem;
+                            letter-spacing: 0.02em;
+                            flex-shrink: 0;
+                            z-index: 10;
+                        }
+
+                        .desktop-hints {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                        }
+                        .mobile-hints {
+                            display: none;
+                        }
+
+                        /* Responsive Adaptation for All Devices (Mobile, Tablet, Desktop) */
+                        @media (max-width: 768px) {
+                            .zoom-modal-topbar {
+                                padding: 12px 16px;
+                                gap: 10px;
+                            }
+                            .zoom-title-area {
+                                font-size: 1rem;
+                                max-width: 48%;
+                            }
+                            .zoom-pill-group {
+                                padding: 2px 3px;
+                            }
+                            .zoom-btn {
+                                width: 32px;
+                                height: 32px;
+                                font-size: 0.84rem;
+                            }
+                            .zoom-btn.zoom-level-btn {
+                                padding: 0 8px;
+                                font-size: 0.76rem;
+                            }
+                            .zoom-btn.zoom-close-btn {
+                                width: 38px;
+                                height: 38px;
+                                font-size: 0.95rem;
+                            }
+
+                            .zoom-stage img {
+                                max-width: 94vw;
+                                max-height: 64vh;
+                            }
+
+                            .zoom-nav-btn {
+                                width: 40px;
+                                height: 40px;
+                                font-size: 0.95rem;
+                                background: rgba(20, 20, 20, 0.88);
+                            }
+                            .zoom-nav-prev { left: 8px; }
+                            .zoom-nav-next { right: 8px; }
+
+                            .zoom-thumb-dock {
+                                bottom: 42px;
+                                padding: 5px 8px;
+                                border-radius: 14px;
+                            }
+                            .zoom-thumb-item {
+                                width: 44px;
+                                height: 44px;
+                                border-radius: 9px;
+                                padding: 2px;
+                            }
+
+                            .desktop-hints {
+                                display: none;
+                            }
+                            .mobile-hints {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                font-size: 0.74rem;
+                                text-align: center;
+                            }
+                        }
+
+                        @media (max-width: 480px) {
+                            .zoom-title-text {
+                                font-size: 0.92rem;
+                            }
+                            .zoom-counter {
+                                font-size: 0.75rem;
+                                padding: 2px 7px;
+                            }
+                            .zoom-thumb-dock {
+                                bottom: 38px;
+                            }
+                            .zoom-nav-btn {
+                                display: none; /* Mobile swipe gestures used */
+                            }
                         }
 
                         /* Product Info Styles */
@@ -693,9 +1528,47 @@
                             margin-bottom: 0.6rem;
                         }
 
-                        .product-description p {
+                        .product-description p,
+                        .product-description-content {
                             color: #6B645C;
                             line-height: 1.65;
+                            font-size: 0.95rem;
+                        }
+
+                        .product-description-content h1,
+                        .product-description-content h2 {
+                            font-family: 'Marcellus', Georgia, serif;
+                            color: #1A2238;
+                            margin: 1.25rem 0 0.45rem;
+                            line-height: 1.3;
+                        }
+
+                        .product-description-content h1 { font-size: 1.35rem; }
+                        .product-description-content h2 { font-size: 1.15rem; }
+
+                        .product-description-content p {
+                            margin: 0 0 0.65rem;
+                        }
+
+                        .product-description-content ul,
+                        .product-description-content ol {
+                            margin: 0.5rem 0 0.75rem 1.4rem;
+                            padding-left: 0.4rem;
+                        }
+
+                        .product-description-content li {
+                            margin-bottom: 0.35rem;
+                        }
+
+                        .product-description-content a {
+                            color: #ff5722;
+                            text-decoration: underline;
+                            font-weight: 500;
+                            transition: color 0.2s;
+                        }
+
+                        .product-description-content a:hover {
+                            color: #e64a19;
                         }
 
                         body {
@@ -725,6 +1598,11 @@
                                 width: 100%;
                                 margin: 0 auto;
                             }
+
+                            .main-image-stage {
+                                height: 420px;
+                                min-height: 360px;
+                            }
                         }
 
                         @media (max-width: 768px) {
@@ -741,6 +1619,17 @@
 
                             .product-title {
                                 font-size: clamp(1.45rem, 5vw, 1.85rem);
+                            }
+
+                            .main-image-stage {
+                                height: 350px;
+                                min-height: 280px;
+                                padding: 8px;
+                            }
+
+                            .detail-thumb-card {
+                                width: 62px;
+                                height: 62px;
                             }
 
                             .atelier-inquire-box {

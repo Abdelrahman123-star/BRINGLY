@@ -105,6 +105,14 @@ app.get('/css/category.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/css/Category.css'));
 });
 
+// Direct route for favicon & web manifest
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/favicon.ico'));
+});
+app.get('/site.webmanifest', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/site.webmanifest'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes

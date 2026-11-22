@@ -100,8 +100,9 @@ exports.showDashboard = async (req, res, activePage) => {
 exports.showProducts = async (req, res, activePage) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 6;
-    const skip = (page - 1) * limit;
+    const viewAll = req.query.view === 'all' || req.query.limit === 'all';
+    const limit = viewAll ? 1000 : (parseInt(req.query.limit) || 24);
+    const skip = viewAll ? 0 : (page - 1) * limit;
     
     // Fetch both products and categories
     const [products, totalProducts, categories] = await Promise.all([
@@ -110,14 +111,14 @@ exports.showProducts = async (req, res, activePage) => {
           path: 'category',
           select: 'name slug _id'
         })
-        .sort({ createdAt: -1, _id: -1 })
+        .sort({ sortOrder: 1, createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit),
       collection.Product.countDocuments(),
       Category.find().sort({ name: 1 }) // Sort categories alphabetically
     ]);
 
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = viewAll ? 1 : Math.ceil(totalProducts / limit);
     res.render('admin/products', {
       user: req.session.user,
       activePage,
@@ -125,6 +126,8 @@ exports.showProducts = async (req, res, activePage) => {
       categories,
       currentPage: page,
       totalPages,
+      totalProducts,
+      viewAll,
       success: req.flash("success"),
       error: req.flash("error")
     });

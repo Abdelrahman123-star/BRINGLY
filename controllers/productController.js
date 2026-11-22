@@ -589,3 +589,33 @@ exports.getProductDetails = async (req, res) => {
         res.redirect('/');
     }
 };
+
+// Reorder products in bulk
+exports.reorderProducts = async (req, res) => {
+    try {
+        const { productIds } = req.body;
+        if (!Array.isArray(productIds) || productIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'Invalid product list provided.' });
+        }
+
+        const bulkOps = productIds.map((id, index) => ({
+            updateOne: {
+                filter: { _id: id },
+                update: { $set: { sortOrder: index + 1 } }
+            }
+        }));
+
+        await Product.bulkWrite(bulkOps);
+
+        return res.json({
+            success: true,
+            message: 'Product catalog order updated successfully.'
+        });
+    } catch (error) {
+        console.error('Error reordering products:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update product order: ' + (error.message || '')
+        });
+    }
+};

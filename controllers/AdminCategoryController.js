@@ -73,7 +73,9 @@ exports.createCategory = async (req, res) => {
 
         // Handle image upload or URL
         if (req.file) {
-            categoryData.imagePath = '/uploads/' + req.file.filename;
+            categoryData.imagePath = req.file.buffer
+                ? `data:${req.file.mimetype || 'image/jpeg'};base64,${req.file.buffer.toString('base64')}`
+                : '/uploads/' + req.file.filename;
         } else if (imageUrl) {
             categoryData.imageUrl = imageUrl;
         }
@@ -134,7 +136,9 @@ exports.updateCategory = async (req, res) => {
 
         // Handle image update
         if (req.file) {
-            updateData.imagePath = '/uploads/' + req.file.filename;
+            updateData.imagePath = req.file.buffer
+                ? `data:${req.file.mimetype || 'image/jpeg'};base64,${req.file.buffer.toString('base64')}`
+                : '/uploads/' + req.file.filename;
             updateData.imageUrl = '';
         } else if (imageUrl) {
             updateData.imageUrl = imageUrl;

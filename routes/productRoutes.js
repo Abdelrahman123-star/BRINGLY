@@ -7,6 +7,17 @@ const Product = require('../models/Product');
 const Category = require('../models/category');
 const Discount = require('../models/discount');
 
+// Safe upload middleware that never throws unhandled 500
+const safeUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      console.warn('Multer upload warning/error:', err.message);
+      req.uploadError = err.message;
+    }
+    next();
+  });
+};
+
 // Public routes
 router.get('/detail/:id', productController.getProductDetails);
 
@@ -15,12 +26,22 @@ router.get('/admin', ensureAdmin, productController.getAllProducts);
 router.get('/:id', ensureAdmin, productController.getProductById);
 router.post('/create', 
   ensureAdmin,
-  upload.any(),
+  safeUpload,
+  productController.createProduct
+);
+router.post('/', 
+  ensureAdmin,
+  safeUpload,
   productController.createProduct
 );
 router.post('/:id', 
   ensureAdmin,
-  upload.any(),
+  safeUpload,
+  productController.updateProduct
+);
+router.put('/:id', 
+  ensureAdmin,
+  safeUpload,
   productController.updateProduct
 );
 router.delete('/:id', ensureAdmin, productController.deleteProduct);

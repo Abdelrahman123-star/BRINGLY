@@ -32,6 +32,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Sync inputs with current state
   function syncInputs() {
+    // If the user typed a URL into imageUrlInput but didn't click '+', include it
+    if (imageUrlInput && imageUrlInput.value.trim()) {
+      const typedUrl = imageUrlInput.value.trim();
+      if (!currentPhotos.some(p => p.src === typedUrl)) {
+        currentPhotos.push({
+          id: 'url_' + Date.now(),
+          type: 'url',
+          src: typedUrl,
+          isThumbnail: currentPhotos.length === 0
+        });
+      }
+    }
+
     // 1. Existing images JSON
     const existingList = currentPhotos
       .filter(p => p.type === 'existing' || p.type === 'url')

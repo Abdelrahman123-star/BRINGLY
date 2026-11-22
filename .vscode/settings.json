@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "*.ejs": "html"
+  },
+  "html.validate.scripts": false,
+  "html.validate.styles": false,
+  "htmlhint.options": {
+    "spec-char-escape": false,
+    "tag-pair": false,
+    "attr-no-duplication": true
+  }
+}

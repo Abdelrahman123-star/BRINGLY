@@ -215,21 +215,22 @@
                         <!-- Left Column: Product Images -->
                         <div class="product-gallery">
                             <div class="main-image-container">
-                                <% const mainDetailImg=product.thumbnail || product.imageUrl || product.imagePath ||
-                                    (product.images && product.images.length> 0 ? product.images[0] : '') ||
-                                    '/imgs/img-notfound.jpg';
-                                    %>
-                                    <a id="mainDetailLink" href="<%= mainDetailImg %>" data-lightbox="product-image"
-                                        data-title="<%= product.name %>">
-                                        <img id="mainDetailImg" src="<%= mainDetailImg %>" alt="<%= product.name %>"
-                                            class="main-image">
-                                    </a>
-                                    <div class="zoom-hint" data-i18n="productDetailPage.zoom.hint">
-                                        <i class="fas fa-search-plus"></i> Click to zoom
-                                    </div>
+                                <% 
+                                    const mainDetailImg = product.thumbnail || product.imageUrl || product.imagePath ||
+                                        (product.images && product.images.length > 0 ? product.images[0] : '') ||
+                                        '/imgs/img-notfound.jpg';
+                                %>
+                                <a id="mainDetailLink" href="<%= mainDetailImg %>" data-lightbox="product-image"
+                                    data-title="<%= product.name %>">
+                                    <img id="mainDetailImg" src="<%= mainDetailImg %>" alt="<%= product.name %>"
+                                        class="main-image">
+                                </a>
+                                <div class="zoom-hint" data-i18n="productDetailPage.zoom.hint">
+                                    <i class="fas fa-search-plus"></i> Click to zoom
+                                </div>
                             </div>
 
-                            <% if (product.images && product.images.length> 1) { %>
+                            <% if (product.images && product.images.length > 1) { %>
                                 <div class="detail-gallery-strip"
                                     style="display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px;">
                                     <% product.images.forEach(function(imgUrl, idx) { %>
@@ -239,7 +240,7 @@
                                             <img src="<%= imgUrl %>" alt="<%= product.name %>"
                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
                                         </div>
-                                        <% }); %>
+                                    <% }); %>
                                 </div>
                                 <script>
                                     function switchDetailPhoto(element, src) {
@@ -255,7 +256,7 @@
                                         }
                                     }
                                 </script>
-                                <% } %>
+                            <% } %>
                         </div>
 
                         <!-- Right Column: Product Info -->
@@ -298,7 +299,7 @@
                                     data-i18n="productDetailPage.stock.<%= product.stock > 10 ? 'inStock' : (product.stock > 0 ? 'lowStock' : 'outOfStock') %>">
                                     <%= product.stock > 10 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock') %>
                                 </span>
-                                <% if (product.stock> 0) { %>
+                                <% if (product.stock > 0) { %>
                                     <span class="stock-count">(<%= product.stock %> <span
                                                 data-i18n="productDetailPage.stock.available">available</span>)</span>
                                     <% } %>
@@ -316,7 +317,11 @@
                                         <span>Visit Original Store</span>
                                     </a>
                                 <% } %>
-                                <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in '${product.name}'${product.price ? ` (~${product.price} EGP)` : ''}. Could you please share more details?`) %>"
+                                <%
+                                    const waDetailMsg = "Hello BRINGLY! I am interested in '" + product.name + "'" + (product.price ? " (~" + product.price + " EGP)" : "") + ". Could you please share more details?";
+                                    const waDetailUrl = "https://wa.me/201006709258?text=" + encodeURIComponent(waDetailMsg);
+                                %>
+                                <a href="<%= waDetailUrl %>"
                                     target="_blank" class="btn-detail-wa" title="Inquire on WhatsApp">
                                     <i class="fab fa-whatsapp"></i>
                                     <span>Inquire & Order on WhatsApp</span>
@@ -325,144 +330,19 @@
                         </div>
                     </div>
 
-                    <% if (false) { /* Comments and reviews section commented out for now */ %>
-                    <section class="comments-section">
-                        <h3 data-i18n="productDetailPage.reviews.title">Customer Reviews</h3>
-
-                        <!-- Rating Summary -->
-                        <div class="rating-summary">
-                            <div class="overall-rating">
-                                <div class="rating-number">
-                                    <%= product.rating.toFixed(1) %>
-                                </div>
-                                <div class="rating-stars">
-                                    <% for(let i=1; i <=5; i++) { %>
-                                        <i
-                                            class="fas fa-star <%= i <= Math.round(product.rating) ? 'active' : '' %>"></i>
-                                        <% } %>
-                                </div>
-                                <div class="rating-count">
-                                    <%= product.numberOfReviews %> <span
-                                            data-i18n="productDetailPage.reviews.reviews">reviews</span>
-                                </div>
-                            </div>
-                            <div class="rating-distribution">
-                                <% for(let i=5; i>= 1; i--) { %>
-                                    <div class="rating-bar">
-                                        <span class="rating-label">
-                                            <%= i %> <span data-i18n="productDetailPage.reviews.stars">stars</span>
-                                        </span>
-                                        <div class="progress-bar">
-                                            <% const width=((comments.filter(c=> c.rating === i).length /
-                                                (product.numberOfReviews || 1)) * 100).toFixed(0); %>
-                                                <div class="progress" style="width: <%= width %>%;"></div>
-                                        </div>
-                                        <span class="rating-count">
-                                            <%= comments.filter(c=> c.rating === i).length %>
-                                        </span>
-                                    </div>
-                                    <% } %>
-                            </div>
-                        </div>
-
-                        <!-- Comment Form (Open to all visitors without login) -->
-                        <div class="comment-form-container">
-                            <h4 class="comment-form-title">
-                                <i class="fas fa-feather-alt"></i> <span data-i18n="productDetailPage.leaveReview">Leave
-                                    a Review & Rating</span>
-                            </h4>
-                            <p class="comment-form-subtitle" data-i18n="productDetailPage.leaveReviewSub">Share your
-                                experience with this piece. No account
-                                needed—just enter your name, star rating, and review.</p>
-
-                            <form id="commentForm" class="comment-form">
-                                <div class="form-group">
-                                    <label for="authorName"><span data-i18n="productDetailPage.yourName">Your
-                                            Name</span> <span class="required-star">*</span></label>
-                                    <input type="text" id="authorName" name="authorName" required
-                                        data-i18n-placeholder="productDetailPage.yourNamePlaceholder"
-                                        placeholder="Enter your name (e.g. Omar, Sarah M.)"
-                                        value="<%= (session && session.user && session.user.username) ? session.user.username : '' %>">
-                                </div>
-                                <div class="rating-input">
-                                    <label data-i18n="productDetailPage.reviews.yourRating">Your Rating <span
-                                            class="required-star">*</span>:</label>
-                                    <div class="star-rating">
-                                        <% for(let i=5; i>= 1; i--) { %>
-                                            <input type="radio" id="star<%= i %>" name="rating" value="<%= i %>"
-                                                required>
-                                            <label for="star<%= i %>" title="<%= i %> Stars"><i
-                                                    class="fas fa-star"></i></label>
-                                            <% } %>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="commentContent" data-i18n="productDetailPage.reviews.yourReview">Your
-                                        Review <span class="required-star">*</span>:</label>
-                                    <textarea id="commentContent" name="content" rows="4" required
-                                        data-i18n-placeholder="productDetailPage.reviews.reviewPlaceholder"
-                                        placeholder="Share your thoughts about this product's quality, fit, or details..."></textarea>
-                                </div>
-                                <button type="submit" class="submit-comment" id="submitReviewBtn"
-                                    data-i18n="productDetailPage.reviews.submitReview">
-                                    <i class="fas fa-paper-plane"></i> <span>Submit Review & Rating</span>
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Comments List -->
-                        <div class="comments-list">
-                            <% if (comments && comments.length> 0) { %>
-                                <% comments.forEach(comment=> { %>
-                                    <div class="comment-card">
-                                        <div class="comment-header">
-                                            <div class="user-info">
-                                                <i class="fas fa-user-circle"></i>
-                                                <span class="username">
-                                                    <%= (comment.user && comment.user.username) ? comment.user.username
-                                                        : (comment.authorName || 'Guest Shopper' ) %>
-                                                </span>
-                                            </div>
-                                            <div class="rating">
-                                                <% for(let i=1; i <=5; i++) { %>
-                                                    <i
-                                                        class="fas fa-star <%= i <= comment.rating ? 'active' : '' %>"></i>
-                                                    <% } %>
-                                            </div>
-                                        </div>
-                                        <div class="comment-content">
-                                            <%= comment.content %>
-                                        </div>
-                                        <div class="comment-footer">
-                                            <span class="comment-date">
-                                                <%= new Date(comment.createdAt).toLocaleDateString() %>
-                                            </span>
-                                            <span class="comment-status <%= comment.status %>"
-                                                data-i18n="productDetailPage.reviews.status.<%= comment.status %>">
-                                                <%= comment.status.charAt(0).toUpperCase() + comment.status.slice(1) %>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <% }); %>
-                                        <% } else { %>
-                                            <p class="no-comments" data-i18n="productDetailPage.reviews.noReviews">No
-                                                reviews yet. Be the first to review this product!</p>
-                                            <% } %>
-                        </div>
-                    </section>
-                    <% } /* End commented out comments section */ %>
+                    <% /* Customer reviews and comments section disabled per request */ %>
 
                     <section class="related-products-section">
                         <h3 data-i18n="productDetailPage.relatedProducts.title">More Products You Might Like</h3>
                         <div class="related-products-grid">
-                            <% if (relatedProducts && relatedProducts.length> 0) { %>
+                            <% if (relatedProducts && relatedProducts.length > 0) { %>
                                 <% relatedProducts.forEach(function(relatedProduct) { %>
                                     <div class="related-product-card"
                                         onclick="window.location.href='/products/detail/<%= relatedProduct._id %>'">
-                                        <% if (relatedProduct.imageUrl && relatedProduct.imageUrl.trim() !=='' ) { %>
+                                        <% if (relatedProduct.imageUrl && relatedProduct.imageUrl.trim() !== '') { %>
                                             <img src="<%= relatedProduct.imageUrl %>" alt="<%= relatedProduct.name %>">
                                             <% } else if (relatedProduct.imagePath && relatedProduct.imagePath.trim()
-                                                !=='' ) { %>
+                                                !== '') { %>
                                                 <img src="<%= relatedProduct.imagePath %>"
                                                     alt="<%= relatedProduct.name %>">
                                                 <% } else { %>

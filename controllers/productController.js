@@ -2,6 +2,55 @@ const { Product } = require('../dataBase');
 const upload = require('../Middleware/upload');
 const Discount = require('../models/discount');
 const Comment = require('../models/Comment');
+const Category = require('../models/category');
+const mongoose = require('mongoose');
+
+// Helper to safely resolve category to a valid ObjectId
+async function resolveCategory(catInput) {
+    if (!catInput) {
+        const anyCat = await Category.findOne();
+        if (anyCat) return anyCat._id;
+        const defaultCat = new Category({ name: 'General', description: 'General Category' });
+        await defaultCat.save();
+        return defaultCat._id;
+    }
+    if (mongoose.Types.ObjectId.isValid(catInput)) {
+        const catById = await Category.findById(catInput);
+        if (catById) return catById._id;
+    }
+    const catByName = await Category.findOne({
+        $or: [{ name: catInput }, { slug: catInput }]
+    });
+    if (catByName) return catByName._id;
+
+    const anyCat = await Category.findOne();
+    if (anyCat) return anyCat._id;
+
+    const defaultCat = new Category({ name: 'General', description: 'General Category' });
+    await defaultCat.save();
+    return defaultCat._id;
+}
+
+// Helper to extract images from file upload (supports serverless buffer & local disk)
+function extractUploadedImages(req) {
+    const list = [];
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        req.files.forEach(f => {
+            if (f.buffer) {
+                list.push(`data:${f.mimetype || 'image/jpeg'};base64,${f.buffer.toString('base64')}`);
+            } else if (f.filename) {
+                list.push('/uploads/' + f.filename);
+            }
+        });
+    } else if (req.file) {
+        if (req.file.buffer) {
+            list.push(`data:${req.file.mimetype || 'image/jpeg'};base64,${req.file.buffer.toString('base64')}`);
+        } else if (req.file.filename) {
+            list.push('/uploads/' + req.file.filename);
+        }
+    }
+    return list;
+}
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -101,27 +150,25 @@ exports.getProductById = async (req, res) => {
 // Create a new product
 exports.createProduct = async (req, res) => {
     try {
-        const { 
-            productName: name, 
-            productPrice: price, 
-            productStock: stock, 
-            productCategory: category,
-            productDescription: description,
-            imageUrl,
-            productLink,
-            selectedThumbnail,
-            existingImagesJson
-        } = req.body;
+        const name = req.body.productName || req.body.name;
+        const price = req.body.productPrice !== undefined ? req.body.productPrice : req.body.price;
+        const stock = req.body.productStock !== undefined ? req.body.productStock : req.body.stock;
+        const categoryInput = req.body.productCategory || req.body.category;
+        const description = req.body.productDescription || req.body.description || '';
+        const imageUrl = req.body.imageUrl;
+        const productLink = req.body.productLink;
+        const selectedThumbnail = req.body.selectedThumbnail;
+        const existingImagesJson = req.body.existingImagesJson;
 
         // Validate required fields
-        if (!name || !price || !stock || !category) {
-            req.flash('error', 'Please fill in all required fields');
+        if (!name || price === undefined || price === null || price === '') {
+            req.flash('error', 'Please fill in product name and price');
             return res.redirect('/admin/products');
         }
 
         // Validate price and stock are positive numbers
         const parsedPrice = parseFloat(price);
-        const parsedStock = parseInt(stock);
+        const parsedStock = parseInt(stock || 0, 10);
 
         if (isNaN(parsedPrice) || parsedPrice < 0) {
             req.flash('error', 'Please enter a valid price');
@@ -132,18 +179,16 @@ exports.createProduct = async (req, res) => {
             req.flash('error', 'Please enter a valid stock quantity');
             return res.redirect('/admin/products');
         }
-        
-        // Collect uploaded files
-        let uploadedImages = [];
-        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-            uploadedImages = req.files.map(f => '/uploads/' + f.filename);
-        } else if (req.file) {
-            uploadedImages = ['/uploads/' + req.file.filename];
-        }
+
+        // Safely resolve category ObjectId
+        const resolvedCategory = await resolveCategory(categoryInput);
+
+        // Collect uploaded files (supports both memoryStorage/Vercel and diskStorage/local)
+        const uploadedImages = extractUploadedImages(req);
 
         // Collect URL images (supports comma-separated URLs or single URL)
         let urlImages = [];
-        if (imageUrl && imageUrl.trim()) {
+        if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
             urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0);
         }
 
@@ -186,7 +231,7 @@ exports.createProduct = async (req, res) => {
 
         let mainImageUrl = '';
         let imagePath = '';
-        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://') || chosenThumbnail.startsWith('data:')) {
             mainImageUrl = chosenThumbnail;
         } else if (chosenThumbnail) {
             imagePath = chosenThumbnail;
@@ -198,11 +243,11 @@ exports.createProduct = async (req, res) => {
         }
 
         const newProduct = new Product({
-            name,
+            name: name.trim(),
             price: parsedPrice,
             stock: parsedStock,
-            category,
-            description: description || '',
+            category: resolvedCategory,
+            description: description ? description.trim() : '',
             imageUrl: mainImageUrl,
             imagePath,
             thumbnail: chosenThumbnail,
@@ -211,7 +256,12 @@ exports.createProduct = async (req, res) => {
         });
 
         await newProduct.save();
-        req.flash('success', 'Product added successfully');
+
+        if (req.uploadError) {
+            req.flash('warning', `Product added, but some files could not be uploaded: ${req.uploadError}`);
+        } else {
+            req.flash('success', 'Product added successfully');
+        }
         res.redirect('/admin/products');
     } catch (error) {
         console.error('Error creating product:', error);
@@ -224,26 +274,24 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { 
-            productName: name, 
-            productPrice: price, 
-            productStock: stock, 
-            productCategory: category,
-            productDescription: description,
-            imageUrl,
-            productLink,
-            selectedThumbnail,
-            existingImagesJson
-        } = req.body;
+        const name = req.body.productName || req.body.name;
+        const price = req.body.productPrice !== undefined ? req.body.productPrice : req.body.price;
+        const stock = req.body.productStock !== undefined ? req.body.productStock : req.body.stock;
+        const categoryInput = req.body.productCategory || req.body.category;
+        const description = req.body.productDescription || req.body.description || '';
+        const imageUrl = req.body.imageUrl;
+        const productLink = req.body.productLink;
+        const selectedThumbnail = req.body.selectedThumbnail;
+        const existingImagesJson = req.body.existingImagesJson;
 
         // Validate required fields
-        if (!name || !price || !stock || !category) {
-            return res.status(400).json({ error: 'Please fill in all required fields' });
+        if (!name || price === undefined || price === null || price === '') {
+            return res.status(400).json({ error: 'Please fill in product name and price' });
         }
 
         // Validate price and stock are positive numbers
         const parsedPrice = parseFloat(price);
-        const parsedStock = parseInt(stock);
+        const parsedStock = parseInt(stock || 0, 10);
 
         if (isNaN(parsedPrice) || parsedPrice < 0) {
             return res.status(400).json({ error: 'Please enter a valid price' });
@@ -257,6 +305,9 @@ exports.updateProduct = async (req, res) => {
         if (!currentProduct) {
             return res.status(404).json({ error: 'Product not found' });
         }
+
+        // Safely resolve category ObjectId
+        const resolvedCategory = await resolveCategory(categoryInput || currentProduct.category);
 
         // Collect existing images
         let existingImages = [];
@@ -273,17 +324,12 @@ exports.updateProduct = async (req, res) => {
             existingImages = [currentProduct.imagePath || currentProduct.imageUrl].filter(Boolean);
         }
 
-        // Collect newly uploaded files
-        let uploadedImages = [];
-        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-            uploadedImages = req.files.map(f => '/uploads/' + f.filename);
-        } else if (req.file) {
-            uploadedImages = ['/uploads/' + req.file.filename];
-        }
+        // Collect newly uploaded files (supports memory buffer & local disk)
+        const uploadedImages = extractUploadedImages(req);
 
         // Collect new URL images
         let urlImages = [];
-        if (imageUrl && imageUrl.trim()) {
+        if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
             urlImages = imageUrl.split(',').map(u => u.trim()).filter(u => u.length > 0 && !existingImages.includes(u));
         }
 
@@ -319,7 +365,7 @@ exports.updateProduct = async (req, res) => {
 
         let mainImageUrl = '';
         let imagePath = '';
-        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://')) {
+        if (chosenThumbnail.startsWith('http://') || chosenThumbnail.startsWith('https://') || chosenThumbnail.startsWith('data:')) {
             mainImageUrl = chosenThumbnail;
         } else if (chosenThumbnail) {
             imagePath = chosenThumbnail;
@@ -331,11 +377,11 @@ exports.updateProduct = async (req, res) => {
         }
 
         const updateData = {
-            name,
+            name: name.trim(),
             price: parsedPrice,
             stock: parsedStock,
-            category: category,
-            description: description || '',
+            category: resolvedCategory,
+            description: description ? description.trim() : '',
             productLink: formattedLink,
             images: allImages,
             thumbnail: chosenThumbnail,
@@ -430,10 +476,11 @@ exports.getProductDetail = async (req, res) => {
     }
 
     // Get related products (products from the same category)
-    const relatedProducts = await Product.find({
-      category: product.category._id,
-      _id: { $ne: product._id }
-    })
+    const relatedQuery1 = { _id: { $ne: product._id } };
+    if (product.category && product.category._id) {
+      relatedQuery1.category = product.category._id;
+    }
+    const relatedProducts = await Product.find(relatedQuery1)
     .limit(3)
     .select('name price imageUrl imagePath');
 
@@ -478,10 +525,11 @@ exports.getProductDetails = async (req, res) => {
         }
 
         // Get related products (same category, excluding current product)
-        const relatedProducts = await Product.find({
-            category: product.category._id,
-            _id: { $ne: product._id }
-        })
+        const relatedQuery2 = { _id: { $ne: product._id } };
+        if (product.category && product.category._id) {
+            relatedQuery2.category = product.category._id;
+        }
+        const relatedProducts = await Product.find(relatedQuery2)
         .limit(4)
         .populate('category', 'name slug');
 

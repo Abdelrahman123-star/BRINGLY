@@ -69,11 +69,6 @@
     <nav class="desktop-nav">
       <ul class="header_list">
         <li><a href="/Category" class="nav-item-link" data-i18n="nav.categories">Categories</a></li>
-        <li>
-          <a href="/track-request" class="nav-item-link track-link">
-            <span data-i18n="nav.trackRequest">Track Request</span>
-          </a>
-        </li>
         <li><a href="/about" class="nav-item-link" data-i18n="nav.aboutUs">About Us</a></li>
         <li><a href="/contact" class="nav-item-link" data-i18n="nav.contactUs">Contact Us</a></li>
         <% if (session && session.user && session.user.role === 'admin') { %>
@@ -235,7 +230,6 @@
       <ul class="mobile-nav-list">
         <li><a href="/"><i class="fas fa-home"></i> <span data-i18n="nav.home">Home</span></a></li>
         <li><a href="/Category"><i class="fas fa-th-large"></i> <span data-i18n="nav.categories">Categories</span></a></li>
-        <li><a href="/track-request"><i class="fas fa-search-location"></i> <span data-i18n="nav.trackRequest">Track Request</span></a></li>
         <li><a href="/about"><i class="fas fa-info-circle"></i> <span data-i18n="nav.aboutUs">About Us</span></a></li>
         <li><a href="/contact"><i class="fas fa-envelope"></i> <span data-i18n="nav.contactUs">Contact Us</span></a></li>
         <% if (session && session.user && session.user.role === 'admin') { %>

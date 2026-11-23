@@ -4,6 +4,7 @@ const pageController = require('../controllers/pageController');
 
 router.get('/', pageController.showHome);
 router.get('/contact', pageController.showContact);
+router.post('/contact', pageController.submitContact);
 router.get('/about', pageController.showAbout);
 router.get('/category', pageController.showCategory);
 router.get('/products/:categorySlug', pageController.showProductsByCategory);

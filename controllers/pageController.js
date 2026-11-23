@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Category = require('../models/category');
 const Discount = require('../models/discount');
+const Message = require('../models/Message');
 
 exports.showHome = async (req, res) => {
     try {
@@ -78,6 +79,45 @@ exports.showAdmin = (req, res) => {
 
 exports.showContact = (req, res) => {
     res.render('pages/contact');
+};
+
+exports.submitContact = async (req, res) => {
+    try {
+        const { name, email, phone, topic, message } = req.body;
+
+        if (!name || !email || !message) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name, email, and message are required fields.'
+            });
+        }
+
+        const newMessage = new Message({
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone ? phone.trim() : '',
+            topic: topic ? topic.trim() : 'General Inquiry',
+            message: message.trim(),
+            status: 'unread'
+        });
+
+        await newMessage.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Inquiry received successfully. Our concierge will be in touch shortly.',
+            data: {
+                id: newMessage._id,
+                name: newMessage.name
+            }
+        });
+    } catch (error) {
+        console.error('Error submitting contact inquiry:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit inquiry. Please try again or reach out on WhatsApp.'
+        });
+    }
 };
 
 exports.showAbout = (req, res) => {

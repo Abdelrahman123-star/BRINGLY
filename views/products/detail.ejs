@@ -24,23 +24,6 @@
     <script src="/js/i18n.js"></script>
 
     <style>
-        /* Add these styles to your existing styles */
-        .stock-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin: 1rem 0;
-        }
-
-        .stock-count {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-
         .quantity button:disabled,
         .quantity input:disabled,
         .add-to-cart:disabled,
@@ -215,19 +198,6 @@
                                 <div class="product-description-content">
                                     <%- product.description ? (/<[a-z][\s\S]*>/i.test(product.description) ? product.description : product.description.replace(/\n/g, '<br>')) : '' %>
                                 </div>
-                            </div>
-                            <div
-                                class="stock-status <%= product.stock > 10 ? 'in-stock' : (product.stock > 0 ? 'low-stock' : 'out-of-stock') %>">
-                                <i
-                                    class="fas <%= product.stock > 10 ? 'fa-check-circle' : (product.stock > 0 ? 'fa-exclamation-circle' : 'fa-times-circle') %>"></i>
-                                <span
-                                    data-i18n="productDetailPage.stock.<%= product.stock > 10 ? 'inStock' : (product.stock > 0 ? 'lowStock' : 'outOfStock') %>">
-                                    <%= product.stock > 10 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock') %>
-                                </span>
-                                <% if (product.stock > 0) { %>
-                                    <span class="stock-count">(<%= product.stock %> <span
-                                                data-i18n="productDetailPage.stock.available">available</span>)</span>
-                                    <% } %>
                             </div>
 
                             <!-- WhatsApp Inquiry & Ordering -->
@@ -1487,33 +1457,6 @@
                             .atelier-perks-list {
                                 grid-template-columns: 1fr;
                             }
-                        }
-
-                        /* Stock Status Styles */
-                        .stock-status {
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            padding: 0.6rem 1rem;
-                            border-radius: 9999px;
-                            font-size: 0.88rem;
-                            font-weight: 600;
-                            margin-bottom: 1.25rem;
-                        }
-
-                        .stock-status.in-stock {
-                            background: rgba(37, 211, 102, 0.12);
-                            color: #1a7a40;
-                        }
-
-                        .stock-status.low-stock {
-                            background: rgba(196, 104, 73, 0.12);
-                            color: #C46849;
-                        }
-
-                        .stock-status.out-of-stock {
-                            background: rgba(26, 34, 56, 0.08);
-                            color: #7A7265;
                         }
 
                         /* Product Description Styles */

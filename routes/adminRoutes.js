@@ -11,6 +11,7 @@ const categoryRoutes = require('./admin/categoryRoutes');
 const cartRoutes = require('./admin/cartRoutes');
 const orderRoutes = require('./admin/orderRoutes');
 const adminRequestController = require('../controllers/adminRequestController');
+const adminMessageController = require('../controllers/adminMessageController');
 
 const { ensureAdmin } = require('../Middleware/auth');
 
@@ -74,6 +75,12 @@ router.post('/discounts/:id/delete', ensureAdmin, discountController.deleteDisco
 router.get('/requests', ensureAdmin, adminRequestController.listRequests);
 router.post('/requests/:id/update', ensureAdmin, adminRequestController.updateRequest);
 router.post('/requests/:id/delete', ensureAdmin, adminRequestController.deleteRequest);
+
+// Customer Inquiries / Messages routes
+router.get('/messages', ensureAdmin, adminMessageController.listMessages);
+router.get('/messages/:id', ensureAdmin, adminMessageController.getMessage);
+router.post('/messages/:id/update', ensureAdmin, adminMessageController.updateMessage);
+router.post('/messages/:id/delete', ensureAdmin, adminMessageController.deleteMessage);
 
 // Admin routes
 router.use('/products', productRoutes);

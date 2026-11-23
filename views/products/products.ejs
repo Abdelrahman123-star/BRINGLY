@@ -120,11 +120,6 @@
             <div class="product-info">
               <h3><%= product.name %></h3>
 
-              <div class="product-stock-tag <%= product.stock > 10 ? 'in-stock' : (product.stock > 0 ? 'low-stock' : 'out-of-stock') %>">
-                <i class="fas <%= product.stock > 10 ? 'fa-check-circle' : (product.stock > 0 ? 'fa-exclamation-circle' : 'fa-times-circle') %>"></i>
-                <span><%= product.stock > 10 ? 'Available in Showroom' : (product.stock > 0 ? 'Limited Quantity' : 'Made to Order') %></span>
-              </div>
-
               <!-- Direct WhatsApp Action Button -->
               <div class="product-wa-action">
                 <a href="https://wa.me/201006709258?text=<%= encodeURIComponent(`Hello BRINGLY! I am interested in '${product.name}'. Could you please share more details, availability, and pricing?`) %>" 

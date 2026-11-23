@@ -1,0 +1,1311 @@
+<%- include('adminComponents/head') %>
+
+<body>
+  <div class="admin-container">
+    <%- include('adminComponents/header') %>
+    <%- include('adminComponents/slideBar') %>
+    <%- include('adminComponents/switchLanguage') %>
+
+    <main class="admin-main">
+      <section class="messages-management">
+        
+        <!-- Header Row -->
+        <div class="page-title-row">
+          <div>
+            <h2><i class="fas fa-envelope-open-text"></i> BRINGLY Atelier Client Messages</h2>
+            <p class="page-subtitle">Track, review, and respond to inquiries submitted via the Contact & Sourcing Concierge desk.</p>
+          </div>
+        </div>
+
+        <!-- Flash Alerts -->
+        <% if (typeof success !== 'undefined' && success.length > 0) { %>
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <%= success %>
+          </div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error.length > 0) { %>
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <%= error %>
+          </div>
+        <% } %>
+
+        <!-- Metrics Overview Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon-wrapper total-icon">
+              <i class="fas fa-inbox"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total Inquiries</h3>
+              <p class="stat-number"><%= stats.total %></p>
+            </div>
+          </div>
+
+          <div class="stat-card <%= stats.unread > 0 ? 'highlight-unread' : '' %>">
+            <div class="stat-icon-wrapper unread-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Unread</h3>
+              <p class="stat-number"><%= stats.unread %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper read-icon">
+              <i class="fas fa-envelope-open"></i>
+            </div>
+            <div class="stat-info">
+              <h3>In Review / Read</h3>
+              <p class="stat-number"><%= stats.read %></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrapper replied-icon">
+              <i class="fas fa-reply"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Replied</h3>
+              <p class="stat-number"><%= stats.replied %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="messages-toolbar">
+          <form action="/admin/messages" method="GET" class="search-filter-form">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" name="q" value="<%= searchQuery || '' %>" placeholder="Search by name, email, phone, topic, or message...">
+            </div>
+
+            <div class="status-select-wrapper">
+              <i class="fas fa-filter"></i>
+              <select name="status" onchange="this.form.submit()">
+                <option value="all" <%= currentStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
+                <option value="unread" <%= currentStatus === 'unread' ? 'selected' : '' %>>Unread Only</option>
+                <option value="read" <%= currentStatus === 'read' ? 'selected' : '' %>>Read / In Review</option>
+                <option value="replied" <%= currentStatus === 'replied' ? 'selected' : '' %>>Replied</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-filter-submit">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+
+            <% if (searchQuery || (currentStatus && currentStatus !== 'all')) { %>
+              <a href="/admin/messages" class="btn-clear-filters" title="Reset all filters">
+                <i class="fas fa-times"></i> Clear
+              </a>
+            <% } %>
+          </form>
+        </div>
+
+        <!-- Messages Data Table -->
+        <div class="messages-table-container">
+          <table class="messages-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Client Details</th>
+                <th>Inquiry Topic</th>
+                <th>Message Preview</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (messagesList && messagesList.length > 0) { %>
+                <% messagesList.forEach(function(item) { 
+                     const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'CU';
+                     const cleanPhone = formatWhatsAppPhone(item.phone);
+                     const waLink = cleanPhone ? 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent('Hello ' + item.name + '! Thank you for reaching out to BRINGLY regarding ' + item.topic + '. How can we assist you today?') : '';
+                     const mailLink = 'mailto:' + encodeURIComponent(item.email) + '?subject=' + encodeURIComponent('Re: ' + item.topic + ' — BRINGLY Concierge');
+                     const dateStr = new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                     const timeStr = new Date(item.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                %>
+                  <tr class="message-row <%= item.status === 'unread' ? 'row-unread' : '' %>">
+                    
+                    <!-- Date -->
+                    <td>
+                      <div class="date-cell">
+                        <span class="date-primary"><%= dateStr %></span>
+                        <span class="time-secondary"><%= timeStr %></span>
+                        <% if (item.status === 'unread') { %>
+                          <span class="new-dot-pill">NEW</span>
+                        <% } %>
+                      </div>
+                    </td>
+
+                    <!-- Client Details -->
+                    <td>
+                      <div class="client-cell">
+                        <div class="client-avatar"><%= initials %></div>
+                        <div class="client-meta">
+                          <strong class="client-name"><%= item.name %></strong>
+                          <a href="<%= mailLink %>" class="client-email" title="Email <%= item.email %>">
+                            <i class="fas fa-envelope"></i> <%= item.email %>
+                          </a>
+                          <% if (item.phone) { %>
+                            <div class="client-phone-row">
+                              <span class="client-phone"><i class="fas fa-phone-alt"></i> <%= item.phone %></span>
+                              <% if (waLink) { %>
+                                <a href="<%= waLink %>" target="_blank" class="mini-wa-btn" title="Chat on WhatsApp">
+                                  <i class="fab fa-whatsapp"></i>
+                                </a>
+                              <% } %>
+                            </div>
+                          <% } %>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Topic -->
+                    <td>
+                      <span class="topic-pill"><%= item.topic %></span>
+                    </td>
+
+                    <!-- Message Preview -->
+                    <td>
+                      <div class="message-preview-cell">
+                        <p class="preview-text" title="<%= item.message %>">
+                          <%= item.message.length > 100 ? item.message.substring(0, 100) + '...' : item.message %>
+                        </p>
+                        <% if (item.status === 'replied' && item.adminReply) { %>
+                          <span class="reply-badge">
+                            <i class="fas fa-check-double"></i> Replied: "<%= item.adminReply.length > 40 ? item.adminReply.substring(0, 40) + '...' : item.adminReply %>"
+                          </span>
+                        <% } %>
+                      </div>
+                    </td>
+
+                    <!-- Status Badge -->
+                    <td>
+                      <span class="badge badge-<%= item.status %>">
+                        <% if (item.status === 'unread') { %>
+                          <i class="fas fa-circle"></i> Unread
+                        <% } else if (item.status === 'read') { %>
+                          <i class="fas fa-envelope-open"></i> Read
+                        <% } else if (item.status === 'replied') { %>
+                          <i class="fas fa-reply"></i> Replied
+                        <% } %>
+                      </span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                      <div class="actions-cell">
+                        <button type="button" class="btn-view-reply" 
+                                onclick='openMessageModal(<%- JSON.stringify(item) %>)'>
+                          <i class="fas fa-eye"></i> View &amp; Reply
+                        </button>
+
+                        <% if (waLink) { %>
+                          <a href="<%= waLink %>" target="_blank" class="btn-quick-wa" title="Quick WhatsApp Chat">
+                            <i class="fab fa-whatsapp"></i>
+                          </a>
+                        <% } %>
+
+                        <form action="/admin/messages/<%= item._id %>/delete" method="POST" onsubmit="return confirm('Permanently delete this inquiry from <%= item.name %>?');" style="display:inline;">
+                          <button type="submit" class="btn-delete" title="Delete Inquiry">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="no-data-cell">
+                    <div class="empty-inbox-state">
+                      <i class="fas fa-inbox"></i>
+                      <h4>No Customer Inquiries Found</h4>
+                      <p>
+                        <% if (searchQuery || (currentStatus && currentStatus !== 'all')) { %>
+                          No messages match your search criteria. Try clearing filters to see all messages.
+                        <% } else { %>
+                          Your concierge inbox is completely up to date! Customer messages submitted through the /contact page will appear here.
+                        <% } %>
+                      </p>
+                      <% if (searchQuery || (currentStatus && currentStatus !== 'all')) { %>
+                        <a href="/admin/messages" class="btn-clear-empty">Reset Filters</a>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- Message Detail & Reply Modal -->
+  <div id="messageModal" class="admin-modal-backdrop" style="display:none;">
+    <div class="admin-modal-box">
+      
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-badge-row">
+            <span id="modalTopicPill" class="topic-pill">Topic</span>
+            <span id="modalStatusBadge" class="badge">Status</span>
+          </div>
+          <h3 id="modalSubject">Client Inquiry</h3>
+        </div>
+        <button type="button" class="close-x" onclick="closeMessageModal()" aria-label="Close Modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Client Profile Banner -->
+        <div class="client-profile-banner">
+          <div class="profile-info-row">
+            <div class="profile-field">
+              <span class="field-label">Sender</span>
+              <strong id="modalClientName" class="field-value">Layla Hassan</strong>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Email Address</span>
+              <a id="modalClientEmail" href="#" class="field-link"><i class="fas fa-envelope"></i> layla@example.com</a>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Phone / WhatsApp</span>
+              <span id="modalClientPhone" class="field-value"><i class="fas fa-phone-alt"></i> Not provided</span>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Date Submitted</span>
+              <span id="modalClientDate" class="field-value">Nov 23, 2026</span>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="quick-channels-bar">
+            <a id="modalWhatsAppBtn" href="#" target="_blank" class="btn-modal-wa">
+              <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+            </a>
+            <a id="modalMailtoBtn" href="#" class="btn-modal-mail">
+              <i class="fas fa-envelope"></i> Open in Mail Client
+            </a>
+          </div>
+        </div>
+
+        <!-- Original Message Box -->
+        <div class="original-message-card">
+          <div class="section-subhead">
+            <i class="fas fa-quote-left"></i> Customer Message
+          </div>
+          <div id="modalClientMessage" class="message-content-text">
+            Client message content goes here.
+          </div>
+        </div>
+
+        <!-- Previous Reply Box (if replied) -->
+        <div id="previousReplyCard" class="previous-reply-card" style="display:none;">
+          <div class="section-subhead">
+            <i class="fas fa-reply"></i> Previous Concierge Response (<span id="modalRepliedDate"></span>)
+          </div>
+          <div id="modalPreviousReplyText" class="previous-reply-text"></div>
+        </div>
+
+        <!-- Reply & Status Form -->
+        <form id="replyMessageForm" method="POST" action="">
+          <div class="reply-composer-card">
+            <div class="section-subhead">
+              <i class="fas fa-paper-plane"></i> Reply &amp; Update Status
+            </div>
+
+            <div class="form-grid-row">
+              <div class="form-group-item">
+                <label for="modalStatusSelect" class="form-label">Inquiry Status</label>
+                <select id="modalStatusSelect" name="status" class="form-control-select">
+                  <option value="unread">Unread</option>
+                  <option value="read">Read / In Review</option>
+                  <option value="replied">Replied / Resolved</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group-item">
+              <label for="modalReplyText" class="form-label">Compose Reply to Client</label>
+              <textarea id="modalReplyText" name="replyText" rows="5" class="form-control-textarea" 
+                        placeholder="Write your personal styling advice or inquiry response here..."></textarea>
+            </div>
+
+            <div class="email-dispatch-checkbox">
+              <label class="checkbox-container">
+                <input type="checkbox" id="modalSendEmailCheck" name="sendEmailReply" value="true" checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-label">
+                  <i class="fas fa-paper-plane"></i> Send this response directly to client's email via BRINGLY Concierge Mailer
+                </span>
+              </label>
+            </div>
+
+            <div class="modal-form-actions">
+              <button type="button" class="btn-modal-cancel" onclick="closeMessageModal()">Cancel</button>
+              <button type="submit" class="btn-modal-save">
+                <i class="fas fa-paper-plane"></i> Save &amp; Send Reply
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* ========================================================
+       BRINGLY ATELIER — ADMIN MESSAGES DASHBOARD
+       Palette: Navy #1A2238 | Terracotta #ff5722 / #c46849 | Canvas #f8fafc
+       ======================================================== */
+    .messages-management {
+      padding: 1.5rem 2rem;
+      background: #f8fafc;
+      min-height: calc(100vh - 80px);
+    }
+
+    .page-title-row {
+      margin-bottom: 1.75rem;
+    }
+    .page-title-row h2 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #1A2238;
+      margin: 0 0 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .page-title-row h2 i {
+      color: #ff5722;
+      font-size: 1.4rem;
+    }
+    .page-subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .alert-success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .alert-error {
+      background: #fff1f2;
+      color: #9f1239;
+      border: 1px solid #fecdd3;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 1.25rem 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+    }
+    .stat-card.highlight-unread {
+      border-color: #fdba74;
+      background: linear-gradient(135deg, #ffffff 70%, #fff7ed 100%);
+    }
+    .stat-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .total-icon { background: #e0f2fe; color: #0284c7; }
+    .unread-icon { background: #ffedd5; color: #ea580c; }
+    .read-icon { background: #f1f5f9; color: #475569; }
+    .replied-icon { background: #dcfce7; color: #16a34a; }
+
+    .stat-info h3 {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin: 0 0 4px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-number {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #1A2238;
+      margin: 0;
+    }
+
+    /* Toolbar */
+    .messages-toolbar {
+      background: #ffffff;
+      padding: 1rem 1.25rem;
+      border-radius: 14px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+    }
+    .search-filter-form {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+    }
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus {
+      border-color: #ff5722;
+      box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1);
+    }
+    .status-select-wrapper {
+      position: relative;
+      min-width: 180px;
+    }
+    .status-select-wrapper i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .status-select-wrapper select {
+      width: 100%;
+      padding: 0.65rem 1.75rem 0.65rem 2.3rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      background: #ffffff;
+      outline: none;
+      cursor: pointer;
+    }
+    .status-select-wrapper select:focus {
+      border-color: #ff5722;
+    }
+    .btn-filter-submit {
+      padding: 0.65rem 1.25rem;
+      background: #1A2238;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+    }
+    .btn-filter-submit:hover {
+      background: #2a375a;
+    }
+    .btn-clear-filters {
+      padding: 0.65rem 1rem;
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s;
+    }
+    .btn-clear-filters:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    /* Table Container */
+    .messages-table-container {
+      background: #ffffff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+    }
+    .messages-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .messages-table thead {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .messages-table th {
+      padding: 1rem 1.25rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #64748b;
+    }
+    .messages-table tbody tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s;
+    }
+    .messages-table tbody tr:hover {
+      background: #fbfcfe;
+    }
+    .messages-table tbody tr.row-unread {
+      background: #fffcf9;
+    }
+    .messages-table tbody tr.row-unread:hover {
+      background: #fff8f0;
+    }
+    .messages-table td {
+      padding: 1.1rem 1.25rem;
+      vertical-align: middle;
+      font-size: 0.92rem;
+      color: #1e293b;
+    }
+
+    /* Date Cell */
+    .date-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .date-primary {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.92rem;
+    }
+    .time-secondary {
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+    .new-dot-pill {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 6px;
+      background: #ff5722;
+      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    /* Client Cell */
+    .client-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .client-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1A2238;
+      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .client-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .client-name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .client-email {
+      font-size: 0.82rem;
+      color: #475569;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .client-email:hover {
+      color: #ff5722;
+      text-decoration: underline;
+    }
+    .client-phone-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .mini-wa-btn {
+      color: #16a34a;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+    }
+    .mini-wa-btn:hover {
+      transform: scale(1.2);
+    }
+
+    /* Topic Pill */
+    .topic-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    /* Message Preview */
+    .message-preview-cell {
+      max-width: 320px;
+    }
+    .preview-text {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.45;
+    }
+    .reply-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: #047857;
+      background: #ecfdf5;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #a7f3d0;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-unread {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+    }
+    .badge-read {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-replied {
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* Action Buttons */
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-view-reply {
+      padding: 0.45rem 0.85rem;
+      background: #1A2238;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-view-reply:hover {
+      background: #ff5722;
+      transform: translateY(-1px);
+    }
+    .btn-quick-wa {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #25d366;
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-quick-wa:hover {
+      background: #1eb956;
+      transform: translateY(-1px);
+    }
+    .btn-delete {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-delete:hover {
+      background: #dc2626;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    /* Empty State */
+    .no-data-cell {
+      text-align: center;
+      padding: 4rem 2rem !important;
+    }
+    .empty-inbox-state {
+      max-width: 440px;
+      margin: 0 auto;
+      color: #64748b;
+    }
+    .empty-inbox-state i {
+      font-size: 3.5rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+    .empty-inbox-state h4 {
+      font-size: 1.25rem;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+    }
+    .empty-inbox-state p {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin: 0 0 1.25rem;
+    }
+    .btn-clear-empty {
+      display: inline-block;
+      padding: 0.6rem 1.25rem;
+      background: #1A2238;
+      color: #ffffff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    /* Modal Backdrop & Container */
+    .admin-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+    .admin-modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 760px;
+      max-height: 90vh;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.97) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding: 1.5rem 1.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      background: #fafafa;
+    }
+    .modal-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .modal-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #1A2238;
+      font-weight: 700;
+    }
+    .close-x {
+      background: none;
+      border: none;
+      font-size: 1.75rem;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .close-x:hover {
+      color: #1e293b;
+    }
+
+    .modal-body {
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Client Profile Banner */
+    .client-profile-banner {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+    .profile-info-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+    .profile-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .field-value {
+      font-size: 0.92rem;
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .field-link {
+      font-size: 0.92rem;
+      color: #ff5722;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .field-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Quick Channels */
+    .quick-channels-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .btn-modal-wa {
+      padding: 0.55rem 1.1rem;
+      background: #25d366;
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn-modal-wa:hover {
+      background: #1eb956;
+    }
+    .btn-modal-mail {
+      padding: 0.55rem 1.1rem;
+      background: #1A2238;
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn-modal-mail:hover {
+      background: #2a375a;
+    }
+
+    /* Original & Reply Boxes */
+    .section-subhead {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #475569;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .original-message-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #1A2238;
+      border-radius: 0 10px 10px 0;
+      padding: 1.25rem 1.4rem;
+    }
+    .message-content-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #1e293b;
+      white-space: pre-wrap;
+    }
+
+    .previous-reply-card {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+      border-radius: 0 10px 10px 0;
+      padding: 1.25rem 1.4rem;
+    }
+    .previous-reply-text {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: #166534;
+      white-space: pre-wrap;
+    }
+
+    /* Reply Composer Card */
+    .reply-composer-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+    .form-group-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
+    .form-control-select {
+      padding: 0.65rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      background: #ffffff;
+      outline: none;
+    }
+    .form-control-select:focus {
+      border-color: #ff5722;
+    }
+    .form-control-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.85rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      line-height: 1.5;
+      outline: none;
+      resize: vertical;
+    }
+    .form-control-textarea:focus {
+      border-color: #ff5722;
+      box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1);
+    }
+
+    /* Checkbox */
+    .email-dispatch-checkbox {
+      margin-top: 0.25rem;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: #334155;
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-container input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #ff5722;
+    }
+    .checkbox-label i {
+      color: #ff5722;
+      margin-right: 2px;
+    }
+
+    /* Modal Form Actions */
+    .modal-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-modal-cancel {
+      padding: 0.65rem 1.25rem;
+      background: #f1f5f9;
+      color: #475569;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-modal-cancel:hover {
+      background: #e2e8f0;
+    }
+    .btn-modal-save {
+      padding: 0.65rem 1.5rem;
+      background: #ff5722;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-modal-save:hover {
+      background: #e64a19;
+      transform: translateY(-1px);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .messages-management {
+        padding: 1rem;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .profile-info-row {
+        grid-template-columns: 1fr;
+      }
+      .actions-cell {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+
+  <!-- Modal Script -->
+  <script>
+    let activeMessageItem = null;
+
+    function formatWhatsApp(rawPhone) {
+      if (!rawPhone) return '';
+      let clean = rawPhone.replace(/[^0-9]/g, '');
+      if (clean.startsWith('01')) {
+        clean = '2' + clean;
+      } else if (!clean.startsWith('20') && clean.startsWith('1')) {
+        clean = '20' + clean;
+      }
+      return clean;
+    }
+
+    function openMessageModal(itemData) {
+      const data = (typeof itemData === 'string') ? JSON.parse(itemData) : itemData;
+      activeMessageItem = data;
+
+      document.getElementById('modalSubject').textContent = data.topic ? (data.topic + ' — ' + data.name) : 'Client Inquiry';
+      document.getElementById('modalTopicPill').textContent = data.topic || 'General Inquiry';
+      
+      const badge = document.getElementById('modalStatusBadge');
+      badge.textContent = data.status.toUpperCase();
+      badge.className = 'badge badge-' + data.status;
+
+      document.getElementById('modalClientName').textContent = data.name;
+      
+      const emailEl = document.getElementById('modalClientEmail');
+      emailEl.textContent = data.email;
+      emailEl.href = 'mailto:' + encodeURIComponent(data.email) + '?subject=' + encodeURIComponent('Re: ' + (data.topic || 'Inquiry') + ' — BRINGLY Concierge');
+
+      const phoneEl = document.getElementById('modalClientPhone');
+      if (data.phone) {
+        phoneEl.innerHTML = '<i class="fas fa-phone-alt"></i> ' + data.phone;
+      } else {
+        phoneEl.textContent = 'Not provided';
+      }
+
+      const dateStr = new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      document.getElementById('modalClientDate').textContent = dateStr;
+
+      document.getElementById('modalClientMessage').textContent = data.message;
+
+      // WhatsApp quick link
+      const waBtn = document.getElementById('modalWhatsAppBtn');
+      const cleanPhone = formatWhatsApp(data.phone);
+      if (cleanPhone) {
+        const text = 'Hello ' + data.name + '! Thank you for reaching out to BRINGLY regarding ' + data.topic + '.\n\n';
+        waBtn.href = 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(text);
+        waBtn.style.display = 'inline-flex';
+      } else {
+        waBtn.style.display = 'none';
+      }
+
+      // Mailto quick link
+      const mailBtn = document.getElementById('modalMailtoBtn');
+      mailBtn.href = 'mailto:' + encodeURIComponent(data.email) + '?subject=' + encodeURIComponent('Re: ' + (data.topic || 'Inquiry') + ' — BRINGLY Concierge');
+
+      // Previous reply
+      const prevCard = document.getElementById('previousReplyCard');
+      if (data.adminReply && data.adminReply.trim() !== '') {
+        prevCard.style.display = 'block';
+        document.getElementById('modalPreviousReplyText').textContent = data.adminReply;
+        const repliedDate = data.repliedAt ? new Date(data.repliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+        document.getElementById('modalRepliedDate').textContent = repliedDate;
+      } else {
+        prevCard.style.display = 'none';
+      }
+
+      // Status selector and reply box
+      document.getElementById('modalStatusSelect').value = data.status || 'read';
+      document.getElementById('modalReplyText').value = data.adminReply || '';
+
+      // Form action
+      document.getElementById('replyMessageForm').action = '/admin/messages/' + data._id + '/update';
+
+      // Show modal
+      document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageModal').style.display = 'none';
+      activeMessageItem = null;
+    }
+
+    // Close on backdrop click
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('messageModal');
+      if (e.target === modal) {
+        closeMessageModal();
+      }
+    });
+
+    // Close on Escape key
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('messageModal');
+        if (modal && modal.style.display !== 'none') {
+          closeMessageModal();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
